@@ -1,0 +1,38 @@
+{
+  "version": "demo-candidates-v1",
+  "candidates": [
+    {
+      "userId": "candidate-chen",
+      "name": "陈火山",
+      "roleTag": "产品 / 运营型合伙人",
+      "letters": "ENFJ",
+      "lifeModeTitle": "生活态的热场共振体",
+      "workModeTitle": "职场态的关系调度官",
+      "strengths": ["能把陌生人快速带进场", "冲突里仍能维持合作意愿", "擅长把复杂目标翻译成共同语言"],
+      "risks": ["容易替团队吸收太多情绪", "对低情商沟通容忍度低"],
+      "collaborationStyle": ["需要高频短反馈", "适合承担外部沟通与资源整合"]
+    },
+    {
+      "userId": "candidate-lin",
+      "name": "林切面",
+      "roleTag": "技术 / 架构型搭子",
+      "letters": "INTP",
+      "lifeModeTitle": "生活态的低频问题猎手",
+      "workModeTitle": "职场态的系统拆解器",
+      "strengths": ["抽象建模能力强", "对复杂问题不慌", "能快速识别伪需求"],
+      "risks": ["对低质量会议耐心有限", "容易延后处理情绪问题"],
+      "collaborationStyle": ["偏异步协作", "需要明确上下文后进入深度产出"]
+    },
+    {
+      "userId": "candidate-song",
+      "name": "宋打拍",
+      "roleTag": "项目 / 执行型队友",
+      "letters": "ESTJ",
+      "lifeModeTitle": "生活态的稳定秩序派",
+      "workModeTitle": "职场态的推进调度官",
+      "strengths": ["推进有节奏", "擅长把松散任务压成结果", "会主动追踪责任边界"],
+      "risks": ["对反复变化容忍度低", "可能让高弹性搭子感到压迫"],
+      "collaborationStyle": ["喜欢里程碑管理", "需要清楚角色和时限"]
+    }
+  ]
+}

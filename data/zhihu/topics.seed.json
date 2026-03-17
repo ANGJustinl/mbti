@@ -1,0 +1,41 @@
+{
+  "version": "zhihu-topics-seed-v1",
+  "topics": [
+    {
+      "id": "zh-001",
+      "title": "如何应对空降领导的瞎指挥？",
+      "sourceUrl": "https://www.zhihu.com/question/placeholder-1",
+      "prompt": "请围绕“空降领导频繁改方向”讨论：你会先维护秩序、争取对齐，还是绕开阻力先做结果？",
+      "riskTags": ["authority", "ambiguity", "execution"]
+    },
+    {
+      "id": "zh-002",
+      "title": "同事总是在群里越级汇报，应该怎么办？",
+      "sourceUrl": "https://www.zhihu.com/question/placeholder-2",
+      "prompt": "面对同事公开越级汇报的情况，你会先正面设边界，还是先私下修复关系？",
+      "riskTags": ["communication", "boundary", "trust"]
+    },
+    {
+      "id": "zh-003",
+      "title": "领导拍脑袋改需求，项目还要不要救？",
+      "sourceUrl": "https://www.zhihu.com/question/placeholder-3",
+      "prompt": "如果关键需求在上线前被临时推翻，你会要求冻结变更，还是接受重构并快速补救？",
+      "riskTags": ["decision", "rhythm", "resilience"]
+    },
+    {
+      "id": "zh-004",
+      "title": "团队里能力最强的人最难合作，该换掉吗？",
+      "sourceUrl": "https://www.zhihu.com/question/placeholder-4",
+      "prompt": "当高能力成员持续制造摩擦时，你更重结果，还是更重团队生态？",
+      "riskTags": ["performance", "culture", "conflict"]
+    },
+    {
+      "id": "zh-005",
+      "title": "方案被老板当众否掉后，如何继续推进？",
+      "sourceUrl": "https://www.zhihu.com/question/placeholder-5",
+      "prompt": "如果你的方案被公开否定，你会立刻据理力争，还是先接住现场再重开一轮？",
+      "riskTags": ["pressure", "ego", "repair"]
+    }
+  ]
+}
+

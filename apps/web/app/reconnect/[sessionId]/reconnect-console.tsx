@@ -1,0 +1,339 @@
+"use client";
+
+import Link from "next/link";
+import { startTransition, useMemo, useState } from "react";
+
+import type { CollaborationManual, ConflictFlag, DebateTopic, Recommendation, ReconnectCard, SessionState } from "@dual-core/domain";
+
+import { explainConflictFlag, getRecommendationInsight, getRiskTagLabel } from "../../../lib/conflict-explainer";
+import type { CurrentUserContext } from "../../../lib/current-user";
+import { withDemoQuery } from "../../../lib/route-utils";
+import type { SessionParticipantSummary } from "../../../lib/workflow";
+
+interface ReconnectConsoleProps {
+  currentUser: CurrentUserContext;
+  actorUserId: string;
+  allowActorSwitch: boolean;
+  participants: {
+    userId: string;
+    targetUserId: string;
+    initiator: SessionParticipantSummary;
+    target: SessionParticipantSummary;
+  };
+  decisions: Record<string, boolean>;
+  sessionId: string;
+  initialState: SessionState;
+  session: {
+    sessionId: string;
+    fitScore: number;
+    recommendation: Recommendation;
+    topic: DebateTopic;
+    conflictFlags: ConflictFlag[];
+  };
+  manual: CollaborationManual;
+  initialCards: ReconnectCard[];
+}
+
+type ReconnectPayload =
+  | {
+      status: "ok";
+      data: {
+        state: SessionState;
+        cards: ReconnectCard[];
+      };
+    }
+  | {
+      status: "error";
+      error: { message: string };
+    };
+
+function getActorHref(sessionId: string, currentUser: CurrentUserContext, actorUserId: string) {
+  const pathname = actorUserId === currentUser.userId
+    ? `/reconnect/${sessionId}`
+    : `/reconnect/${sessionId}?actor=${encodeURIComponent(actorUserId)}`;
+
+  return withDemoQuery(pathname, currentUser.demoMode);
+}
+
+export function ReconnectConsole({
+  currentUser,
+  actorUserId,
+  allowActorSwitch,
+  participants,
+  decisions,
+  sessionId,
+  initialState,
+  session,
+  manual,
+  initialCards,
+}: ReconnectConsoleProps) {
+  const [state, setState] = useState(initialState);
+  const [cards, setCards] = useState(initialCards);
+  const [decisionState, setDecisionState] = useState(decisions);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const actorCard = useMemo(
+    () => cards.find((card) => card.userId === actorUserId) ?? cards[0],
+    [actorUserId, cards],
+  );
+  const counterpartCard = useMemo(
+    () => cards.find((card) => card.userId !== actorUserId) ?? cards[1] ?? cards[0],
+    [actorUserId, cards],
+  );
+  const actorLabel = actorUserId === currentUser.userId ? "我" : "切换视角中的操作者";
+  const actorConfirmed = decisionState[actorUserId] ?? state === "exchanged";
+  const counterpartConfirmed =
+    decisionState[counterpartCard?.userId ?? ""] ?? state === "exchanged";
+  const actorSummary =
+    actorUserId === participants.userId ? participants.initiator : participants.target;
+  const counterpartSummary =
+    actorUserId === participants.userId ? participants.target : participants.initiator;
+  const recommendation = getRecommendationInsight(session.recommendation);
+
+  function confirm() {
+    setPending(true);
+    setError(null);
+
+    startTransition(async () => {
+      try {
+        const basePath =
+          actorUserId === currentUser.userId
+            ? "/api/reconnect/confirm"
+            : `/api/reconnect/confirm?actor=${encodeURIComponent(actorUserId)}`;
+        const response = await fetch(withDemoQuery(basePath, currentUser.demoMode), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sessionId,
+            actorUserId: actorUserId === currentUser.userId ? undefined : actorUserId,
+            confirmed: true,
+          }),
+        });
+
+        const payload = (await response.json()) as ReconnectPayload;
+        if (payload.status === "error") {
+          setError(payload.error.message);
+          setPending(false);
+          return;
+        }
+
+        setState(payload.data.state);
+        setCards(payload.data.cards);
+        setDecisionState((current) => ({
+          ...current,
+          [actorUserId]: true,
+          ...(payload.data.state === "exchanged"
+            ? {
+                [participants.userId]: true,
+                [participants.targetUserId]: true,
+              }
+            : {}),
+        }));
+        setPending(false);
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "确认连接失败");
+        setPending(false);
+      }
+    });
+  }
+
+  return (
+    <main className="stack">
+      <section className="split-grid">
+        <article className="hero-panel">
+          <span className="eyebrow">Reconnect</span>
+          <h1 className="hero-title">《专属协作说明书》</h1>
+          <p className="lead">{manual.summary}</p>
+        </article>
+
+        <aside className="panel">
+          <span className="eyebrow">本次判定</span>
+          <div className="score-badge section">
+            <strong>{session.fitScore}</strong>
+            <span>/ 100</span>
+          </div>
+          <p className="lead">{recommendation.label}</p>
+          <p className="muted">{recommendation.description}</p>
+          <div className="pair-line section">
+            <span className="chip">题源</span>
+            <a href={session.topic.sourceUrl} target="_blank" rel="noreferrer" className="ghost-link">
+              查看知乎题目
+            </a>
+          </div>
+          <div className="pill-row section">
+            {session.topic.riskTags.map((tag) => (
+              <span key={tag} className="chip">
+                {getRiskTagLabel(tag)}
+              </span>
+            ))}
+          </div>
+        </aside>
+      </section>
+
+      <section className="detail-grid section">
+        <article className="manual-card">
+          <span className="eyebrow">互补价值</span>
+          <ul className="list">
+            {manual.complements.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </article>
+        <article className="manual-card">
+          <span className="eyebrow">风险提醒</span>
+          <ul className="list">
+            {manual.riskPoints.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </article>
+        <article className="manual-card">
+          <span className="eyebrow">沟通规则</span>
+          <ul className="list">
+            {manual.communicationRules.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </article>
+        <article className="manual-card">
+          <span className="eyebrow">分工建议</span>
+          <ul className="list">
+            {manual.workSplitSuggestions.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </article>
+      </section>
+
+      <section className="split-grid section">
+        <article className="panel">
+          <span className="eyebrow">排雷解释</span>
+          <h2>{session.topic.title}</h2>
+          <p className="lead">{session.topic.prompt}</p>
+          <div className="stack section">
+            {session.conflictFlags.length > 0 ? (
+              session.conflictFlags.map((flag) => {
+                const insight = explainConflictFlag(flag);
+
+                return (
+                  <article key={flag.type} className="card-block">
+                    <div className="pair-line">
+                      <span className="status-chip">{insight.label}</span>
+                      <span className={flag.severity === "high" ? "danger" : "warning"}>
+                        {insight.severityLabel}
+                      </span>
+                    </div>
+                    <p className="muted section">{flag.reason}</p>
+                    <p className="muted">{insight.signal}</p>
+                    <p className="helper-text">
+                      <strong>建议动作：</strong>
+                      {insight.action}
+                    </p>
+                  </article>
+                );
+              })
+            ) : (
+              <article className="card-block">
+                <h3>当前没有明确冲突标签</h3>
+                <p className="muted">这次组合暂时没有触发结构化排雷标签，可以把重点放在分工和执行节奏的细化上。</p>
+              </article>
+            )}
+          </div>
+        </article>
+
+        <article className="panel">
+          <span className="eyebrow">一键交换现实名片</span>
+          <p className="lead">
+            当前状态：
+            {state === "exchanged" ? " 双方都已确认，数字名片已解锁。" : " 仍需双方确认，联系方式会保持脱敏。"}
+          </p>
+          <div className="stack section">
+            <article className="card-block">
+              <div className="pair-line">
+                <span className="chip">{actorLabel}</span>
+                <span className={actorConfirmed ? "muted" : "warning"}>
+                  {actorConfirmed ? "已确认" : "待确认"}
+                </span>
+              </div>
+              <h3>{actorCard?.displayName ?? actorSummary.name}</h3>
+              <p className="muted">{actorCard?.title ?? actorSummary.workModeTitle ?? actorSummary.roleTag}</p>
+            </article>
+            <article className="card-block">
+              <div className="pair-line">
+                <span className="chip">对方</span>
+                <span className={counterpartConfirmed ? "muted" : "warning"}>
+                  {counterpartConfirmed ? "已确认" : "待确认"}
+                </span>
+              </div>
+              <h3>{counterpartCard?.displayName ?? counterpartSummary.name}</h3>
+              <p className="muted">
+                {counterpartCard?.title ?? counterpartSummary.workModeTitle ?? counterpartSummary.roleTag}
+              </p>
+            </article>
+          </div>
+
+          {allowActorSwitch ? (
+            <div className="inline-actions section">
+              <Link href={getActorHref(sessionId, currentUser, participants.userId)} className="ghost-link">
+                查看 {participants.initiator.name} 视角
+              </Link>
+              <Link href={getActorHref(sessionId, currentUser, participants.targetUserId)} className="ghost-link">
+                查看 {participants.target.name} 视角
+              </Link>
+            </div>
+          ) : null}
+
+          <div className="inline-actions section">
+            <button
+              type="button"
+              className="cta-link button-link"
+              onClick={confirm}
+              disabled={state === "exchanged" || pending || actorConfirmed}
+            >
+              {pending
+                ? "正在确认..."
+                : actorConfirmed
+                  ? "当前视角已确认"
+                  : actorUserId === currentUser.userId
+                    ? "我已确认"
+                    : `以 ${actorSummary.name} 视角确认`}
+            </button>
+          </div>
+
+          {error ? <p className="danger helper-text">{error}</p> : null}
+
+          <div className="stack section">
+            {cards.map((card) => (
+              <article key={card.sessionId} className="card-block">
+                <h3>{card.displayName}</h3>
+                <p className="muted">{card.title}</p>
+                <div className="pair-line">
+                  <span className="chip">数字名片</span>
+                  <span className="muted">{card.contactValue ?? card.contactHint}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      <section className="panel">
+        <span className="eyebrow">知乎护身符</span>
+        <div className="card-grid section">
+          {manual.zhihuAdviceRefs.map((item) => (
+            <article key={item.sourceUrl} className="topic-card">
+              <h3>{item.title}</h3>
+              <p className="muted">{item.excerpt}</p>
+              <a href={item.sourceUrl} target="_blank" rel="noreferrer" className="ghost-link section">
+                查看原文
+              </a>
+            </article>
+          ))}
+        </div>
+      </section>
+    </main>
+  );
+}

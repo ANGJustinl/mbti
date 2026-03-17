@@ -1,0 +1,23 @@
+{
+  "name": "dual-core-workplace",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "db:generate": "DATABASE_URL=${DATABASE_URL:-file:./prisma/dev.db} prisma generate",
+    "db:push": "mkdir -p prisma && touch prisma/dev.db && DATABASE_URL=${DATABASE_URL:-file:./prisma/dev.db} prisma db push",
+    "db:push:test": "mkdir -p prisma && touch prisma/test.db && DATABASE_URL=file:./prisma/test.db prisma db push",
+    "build": "pnpm db:generate && pnpm db:push && pnpm --filter web build",
+    "lint": "pnpm --filter web lint",
+    "typecheck": "pnpm db:generate && pnpm --filter web typecheck",
+    "test": "pnpm db:generate && pnpm db:push:test && vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "prisma": "^7.5.0",
+    "vitest": "^4.1.0"
+  }
+}

@@ -1,0 +1,367 @@
+{
+  "version": "wmti-v1",
+  "dimensions": ["energy", "perception", "decision", "execution"],
+  "questions": [
+    {
+      "id": "Q01",
+      "dimension": "energy",
+      "prompt": "新项目刚启动时，你更自然会：",
+      "options": [
+        { "key": "A", "label": "立刻拉人开聊，把气氛烧起来", "code": "E" },
+        { "key": "B", "label": "先独自消化背景，再决定找谁聊", "code": "I" }
+      ]
+    },
+    {
+      "id": "Q02",
+      "dimension": "energy",
+      "prompt": "一次高强度会议结束后，你通常会：",
+      "options": [
+        { "key": "A", "label": "继续找人复盘，越聊越清醒", "code": "E" },
+        { "key": "B", "label": "先把自己抽离出来，安静整理", "code": "I" }
+      ]
+    },
+    {
+      "id": "Q03",
+      "dimension": "energy",
+      "prompt": "遇到模糊需求时，你更容易通过什么恢复掌控感？",
+      "options": [
+        { "key": "A", "label": "多和人碰撞，边说边试", "code": "E" },
+        { "key": "B", "label": "先自己想通，再输出判断", "code": "I" }
+      ]
+    },
+    {
+      "id": "Q04",
+      "dimension": "energy",
+      "prompt": "你更喜欢的协作开场是：",
+      "options": [
+        { "key": "A", "label": "快速破冰，现场搭起节奏", "code": "E" },
+        { "key": "B", "label": "给彼此预读材料，再进入讨论", "code": "I" }
+      ]
+    },
+    {
+      "id": "Q05",
+      "dimension": "energy",
+      "prompt": "当团队进入卡壳期，你通常会：",
+      "options": [
+        { "key": "A", "label": "主动调动大家，先把场面推起来", "code": "E" },
+        { "key": "B", "label": "自己找线索，把突破口想明白", "code": "I" }
+      ]
+    },
+    {
+      "id": "Q06",
+      "dimension": "energy",
+      "prompt": "你在陌生合作场景中的默认状态更像：",
+      "options": [
+        { "key": "A", "label": "先说先试，从互动里找感觉", "code": "E" },
+        { "key": "B", "label": "先看先听，从观察里建模", "code": "I" }
+      ]
+    },
+    {
+      "id": "Q07",
+      "dimension": "energy",
+      "prompt": "收到复杂任务时，你第一反应更偏向：",
+      "options": [
+        { "key": "A", "label": "约人对一下，把问题外化", "code": "E" },
+        { "key": "B", "label": "开个文档，先独立拆解", "code": "I" }
+      ]
+    },
+    {
+      "id": "Q08",
+      "dimension": "energy",
+      "prompt": "临近截止日时，你更依赖：",
+      "options": [
+        { "key": "A", "label": "现场推动和实时反馈", "code": "E" },
+        { "key": "B", "label": "个人专注和安静冲刺", "code": "I" }
+      ]
+    },
+    {
+      "id": "Q09",
+      "dimension": "energy",
+      "prompt": "你更常见的表达启动方式是：",
+      "options": [
+        { "key": "A", "label": "先说出来，再边说边修", "code": "E" },
+        { "key": "B", "label": "先在脑子里过一遍，再说", "code": "I" }
+      ]
+    },
+    {
+      "id": "Q10",
+      "dimension": "energy",
+      "prompt": "如果必须和一个陌生团队合作一周，你更希望：",
+      "options": [
+        { "key": "A", "label": "第一天就建立高频沟通", "code": "E" },
+        { "key": "B", "label": "先明确边界，减少无效社交", "code": "I" }
+      ]
+    },
+    {
+      "id": "Q11",
+      "dimension": "perception",
+      "prompt": "面对一个还很混沌的新方向，你更先抓：",
+      "options": [
+        { "key": "A", "label": "已经发生的事实与约束", "code": "S" },
+        { "key": "B", "label": "背后可能长出的趋势", "code": "N" }
+      ]
+    },
+    {
+      "id": "Q12",
+      "dimension": "perception",
+      "prompt": "你评估一个方案时更在意：",
+      "options": [
+        { "key": "A", "label": "它是否可验证、可落地", "code": "S" },
+        { "key": "B", "label": "它是否足够新、足够有潜力", "code": "N" }
+      ]
+    },
+    {
+      "id": "Q13",
+      "dimension": "perception",
+      "prompt": "别人描述问题时，你更容易记住：",
+      "options": [
+        { "key": "A", "label": "具体过程和细节节点", "code": "S" },
+        { "key": "B", "label": "潜在模式和隐藏逻辑", "code": "N" }
+      ]
+    },
+    {
+      "id": "Q14",
+      "dimension": "perception",
+      "prompt": "当一个项目看上去有机会时，你更自然会问：",
+      "options": [
+        { "key": "A", "label": "资源、周期、预算够不够", "code": "S" },
+        { "key": "B", "label": "如果成功，它能改写什么", "code": "N" }
+      ]
+    },
+    {
+      "id": "Q15",
+      "dimension": "perception",
+      "prompt": "你更信任哪种判断依据？",
+      "options": [
+        { "key": "A", "label": "已有数据和历史经验", "code": "S" },
+        { "key": "B", "label": "抽象模型和趋势感", "code": "N" }
+      ]
+    },
+    {
+      "id": "Q16",
+      "dimension": "perception",
+      "prompt": "在复盘时，你通常会先说：",
+      "options": [
+        { "key": "A", "label": "这次具体哪里出了问题", "code": "S" },
+        { "key": "B", "label": "这个问题反映出什么更大的结构", "code": "N" }
+      ]
+    },
+    {
+      "id": "Q17",
+      "dimension": "perception",
+      "prompt": "如果别人提一个很大胆的想法，你更先判断：",
+      "options": [
+        { "key": "A", "label": "它离现实多远", "code": "S" },
+        { "key": "B", "label": "它指向了什么新的可能", "code": "N" }
+      ]
+    },
+    {
+      "id": "Q18",
+      "dimension": "perception",
+      "prompt": "你更擅长的是：",
+      "options": [
+        { "key": "A", "label": "把松散信息落成明确执行", "code": "S" },
+        { "key": "B", "label": "从碎片里看出未来图景", "code": "N" }
+      ]
+    },
+    {
+      "id": "Q19",
+      "dimension": "perception",
+      "prompt": "你更喜欢别人如何给你汇报？",
+      "options": [
+        { "key": "A", "label": "先讲现状、再讲问题、再讲方案", "code": "S" },
+        { "key": "B", "label": "先讲判断、再讲方向、再讲依据", "code": "N" }
+      ]
+    },
+    {
+      "id": "Q20",
+      "dimension": "perception",
+      "prompt": "你对“靠谱”的理解更接近：",
+      "options": [
+        { "key": "A", "label": "细节不掉线，承诺能兑现", "code": "S" },
+        { "key": "B", "label": "能看见别人没看见的机会", "code": "N" }
+      ]
+    },
+    {
+      "id": "Q21",
+      "dimension": "decision",
+      "prompt": "当两种方案都可行时，你更先看：",
+      "options": [
+        { "key": "A", "label": "哪种逻辑更严密，代价更低", "code": "T" },
+        { "key": "B", "label": "哪种更照顾关系和长期感受", "code": "F" }
+      ]
+    },
+    {
+      "id": "Q22",
+      "dimension": "decision",
+      "prompt": "你在反馈别人时，更倾向：",
+      "options": [
+        { "key": "A", "label": "先把问题讲清，不绕弯", "code": "T" },
+        { "key": "B", "label": "先照顾接收感，再进入问题", "code": "F" }
+      ]
+    },
+    {
+      "id": "Q23",
+      "dimension": "decision",
+      "prompt": "遇到队友失误时，你更自然会想：",
+      "options": [
+        { "key": "A", "label": "这套机制哪里有漏洞", "code": "T" },
+        { "key": "B", "label": "对方现在是不是已经很难受了", "code": "F" }
+      ]
+    },
+    {
+      "id": "Q24",
+      "dimension": "decision",
+      "prompt": "当你必须拍板时，你更常依据：",
+      "options": [
+        { "key": "A", "label": "标准、逻辑、利弊表", "code": "T" },
+        { "key": "B", "label": "人心、影响和团队可持续性", "code": "F" }
+      ]
+    },
+    {
+      "id": "Q25",
+      "dimension": "decision",
+      "prompt": "你更容易被哪种人说服？",
+      "options": [
+        { "key": "A", "label": "推理严密、证据清楚的人", "code": "T" },
+        { "key": "B", "label": "理解人心、表达有温度的人", "code": "F" }
+      ]
+    },
+    {
+      "id": "Q26",
+      "dimension": "decision",
+      "prompt": "如果同事提出一个你不认同的方案，你更先：",
+      "options": [
+        { "key": "A", "label": "拆它的漏洞和隐患", "code": "T" },
+        { "key": "B", "label": "理解他为什么会这样看", "code": "F" }
+      ]
+    },
+    {
+      "id": "Q27",
+      "dimension": "decision",
+      "prompt": "你更怕哪种团队状态？",
+      "options": [
+        { "key": "A", "label": "标准混乱，谁都按自己理解做", "code": "T" },
+        { "key": "B", "label": "关系冷硬，大家都不愿意开口", "code": "F" }
+      ]
+    },
+    {
+      "id": "Q28",
+      "dimension": "decision",
+      "prompt": "你更认可的领导方式是：",
+      "options": [
+        { "key": "A", "label": "讲清目标和标准，对事不对人", "code": "T" },
+        { "key": "B", "label": "先建立信任，再推动要求", "code": "F" }
+      ]
+    },
+    {
+      "id": "Q29",
+      "dimension": "decision",
+      "prompt": "别人评价你“太冷”或“太软”时，你更可能：",
+      "options": [
+        { "key": "A", "label": "被说太冷，因为我优先效率和逻辑", "code": "T" },
+        { "key": "B", "label": "被说太软，因为我优先感受和关系", "code": "F" }
+      ]
+    },
+    {
+      "id": "Q30",
+      "dimension": "decision",
+      "prompt": "当合作进入僵局，你更倾向怎么破？",
+      "options": [
+        { "key": "A", "label": "重建决策规则，重新排优先级", "code": "T" },
+        { "key": "B", "label": "重建信任场，先恢复说话空间", "code": "F" }
+      ]
+    },
+    {
+      "id": "Q31",
+      "dimension": "execution",
+      "prompt": "你更舒服的工作方式是：",
+      "options": [
+        { "key": "A", "label": "先定好节奏和节点，再推进", "code": "J" },
+        { "key": "B", "label": "边走边调，保留弹性", "code": "P" }
+      ]
+    },
+    {
+      "id": "Q32",
+      "dimension": "execution",
+      "prompt": "面对截止日，你更常见的状态是：",
+      "options": [
+        { "key": "A", "label": "越临近越想提前锁定一切", "code": "J" },
+        { "key": "B", "label": "越临近越能在变化里冲刺", "code": "P" }
+      ]
+    },
+    {
+      "id": "Q33",
+      "dimension": "execution",
+      "prompt": "你更喜欢什么样的任务管理方式？",
+      "options": [
+        { "key": "A", "label": "清单明确、状态清楚、可追踪", "code": "J" },
+        { "key": "B", "label": "先抓重点，细节后面边做边补", "code": "P" }
+      ]
+    },
+    {
+      "id": "Q34",
+      "dimension": "execution",
+      "prompt": "如果计划被临时打断，你通常会：",
+      "options": [
+        { "key": "A", "label": "尽快重建秩序，不然会很烦躁", "code": "J" },
+        { "key": "B", "label": "顺势改写路线，接受变化", "code": "P" }
+      ]
+    },
+    {
+      "id": "Q35",
+      "dimension": "execution",
+      "prompt": "你更认可的项目推进方式是：",
+      "options": [
+        { "key": "A", "label": "明确负责人与里程碑，按节奏推进", "code": "J" },
+        { "key": "B", "label": "先把机会抓住，后面再逐步收口", "code": "P" }
+      ]
+    },
+    {
+      "id": "Q36",
+      "dimension": "execution",
+      "prompt": "当别人拖延时，你更容易：",
+      "options": [
+        { "key": "A", "label": "焦躁，因为事情没有按计划走", "code": "J" },
+        { "key": "B", "label": "理解，因为我也会临场改主意", "code": "P" }
+      ]
+    },
+    {
+      "id": "Q37",
+      "dimension": "execution",
+      "prompt": "你更偏好的会议结果是：",
+      "options": [
+        { "key": "A", "label": "明确结论、负责人和时间点", "code": "J" },
+        { "key": "B", "label": "保留选择空间，不急着一次定死", "code": "P" }
+      ]
+    },
+    {
+      "id": "Q38",
+      "dimension": "execution",
+      "prompt": "工作台面更像哪一种状态？",
+      "options": [
+        { "key": "A", "label": "分类清晰，随时能进入执行", "code": "J" },
+        { "key": "B", "label": "有点散，但我知道东西都在哪", "code": "P" }
+      ]
+    },
+    {
+      "id": "Q39",
+      "dimension": "execution",
+      "prompt": "别人临时改需求时，你更自然：",
+      "options": [
+        { "key": "A", "label": "先确认影响范围和重排顺序", "code": "J" },
+        { "key": "B", "label": "先接住变化，再边做边修", "code": "P" }
+      ]
+    },
+    {
+      "id": "Q40",
+      "dimension": "execution",
+      "prompt": "你更像哪种协作者？",
+      "options": [
+        { "key": "A", "label": "喜欢把事情提前钉住的人", "code": "J" },
+        { "key": "B", "label": "擅长在变化中找机会的人", "code": "P" }
+      ]
+    }
+  ]
+}
+

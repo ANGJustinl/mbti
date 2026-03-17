@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../apps/web/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id               String               @id
+  name             String
+  roleTag          String
+  contactCard      String?
+  isSeedCandidate  Boolean              @default(false)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  assessments      AssessmentSubmission[]
+  personalityProfile PersonalityProfile?
+  matchIntents     MatchIntent[]
+  reconnectDecisions ReconnectDecision[]
+  secondMeAccount  SecondMeAccount?
+}
+
+model SecondMeAccount {
+  id             String   @id @default(cuid())
+  userId         String?  @unique
+  secondmeUserId String   @unique
+  name           String?
+  email          String?
+  avatarUrl      String?
+  route          String?
+  accessToken    String
+  refreshToken   String
+  tokenExpiresAt DateTime
+  scopeJson      String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model AssessmentSubmission {
+  id           String   @id @default(cuid())
+  userId       String
+  answersJson  String
+  questionCount Int
+  submittedAt  DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PersonalityProfile {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  wmtiLetters           String
+  wmtiJson              String
+  lifeModeTitle         String
+  workModeTitle         String
+  strengthsJson         String
+  risksJson             String
+  collaborationStyleJson String
+  cardSummary           String
+  cardTagline           String
+  actionHintsJson       String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MatchIntent {
+  id           String          @id @default(cuid())
+  userId       String
+  targetUserId String
+  lookingFor   String
+  mustHaveJson String
+  redFlagsJson String
+  scene        String
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions     SandboxSession[]
+}
+
+model SandboxSession {
+  id                 String             @id @default(cuid())
+  matchIntentId      String
+  userId             String
+  targetUserId       String
+  topicId            String
+  topicTitle         String
+  topicSourceUrl     String
+  topicPrompt        String
+  topicRiskTagsJson  String
+  fitScore           Int?
+  recommendation     String?
+  conflictFlagsJson  String?
+  currentRound       Int                @default(0)
+  state              String             @default("matched")
+  finalizedAt        DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  matchIntent        MatchIntent        @relation(fields: [matchIntentId], references: [id], onDelete: Cascade)
+  rounds             SandboxRound[]
+  manual             CollaborationManual?
+  reconnectDecisions ReconnectDecision[]
+}
+
+model SandboxRound {
+  id             String         @id @default(cuid())
+  sessionId      String
+  roundIndex     Int
+  question       String
+  agentAResponse String
+  agentBResponse String
+  observerNote   String
+  fitScore       Int
+  createdAt      DateTime       @default(now())
+  session        SandboxSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, roundIndex])
+}
+
+model CollaborationManual {
+  id                     String         @id @default(cuid())
+  sessionId              String         @unique
+  summary                String
+  complementsJson        String
+  riskPointsJson         String
+  communicationRulesJson String
+  workSplitSuggestionsJson String
+  zhihuAdviceRefsJson    String
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  session                SandboxSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model ReconnectDecision {
+  id        String         @id @default(cuid())
+  sessionId String
+  userId    String
+  confirmed Boolean
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  session   SandboxSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, userId])
+}
