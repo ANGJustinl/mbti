@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
 
 import type { EntryMetric } from "../../lib/entry-view";
+import { AppLink } from "./app-link";
 
 interface ActionLink {
   href: string;
@@ -30,13 +30,13 @@ export function EntryHero({ eyebrow, title, description, statusLine, metrics, ac
       <p className="lead">{description}</p>
       <div className="action-row section">
         {actions.map((action) => (
-          <Link
+          <AppLink
             key={`${action.href}-${action.label}`}
             href={action.href}
             className={action.tone === "secondary" ? "ghost-link" : "cta-link"}
           >
             {action.label}
-          </Link>
+          </AppLink>
         ))}
       </div>
       {children ? <div className="entry-inline-note section">{children}</div> : null}

@@ -1,10 +1,18 @@
 import { MissingSecondMeConfigError, getSecondMeConfig } from "./config";
 import {
+  addSecondMeNote,
   exchangeCodeForToken,
+  fetchSecondMeUserShades,
+  fetchSecondMeUserSoftMemory,
   fetchSecondMeUserInfo,
+  ingestSecondMeAgentMemory,
   refreshSecondMeToken,
   runActJson,
+  type SecondMeAgentMemoryPayload,
   type SecondMeActPayload,
+  type SecondMeNotePayload,
+  type SecondMeShade,
+  type SecondMeSoftMemoryItem,
   type SecondMeUserInfo,
 } from "./client";
 import {
@@ -114,6 +122,35 @@ export async function getCurrentSecondMeUser() {
 export async function runSecondMeActJson<T>(payload: SecondMeActPayload) {
   const session = await ensureValidSecondMeSession();
   return runActJson<T>(session.accessToken, payload);
+}
+
+export async function getSecondMeAccessToken() {
+  const session = await ensureValidSecondMeSession();
+  return session.accessToken;
+}
+
+export async function getSecondMeProfileData() {
+  const session = await ensureValidSecondMeSession();
+  const [shades, softMemory] = await Promise.all([
+    fetchSecondMeUserShades(session.accessToken),
+    fetchSecondMeUserSoftMemory(session.accessToken),
+  ]);
+
+  return {
+    session,
+    shades: shades.data.shades ?? ([] as SecondMeShade[]),
+    softMemory: softMemory.data.list ?? ([] as SecondMeSoftMemoryItem[]),
+  };
+}
+
+export async function ingestSecondMeMemory(payload: SecondMeAgentMemoryPayload) {
+  const session = await ensureValidSecondMeSession();
+  return ingestSecondMeAgentMemory(session.accessToken, payload);
+}
+
+export async function writeSecondMeNote(payload: SecondMeNotePayload) {
+  const session = await ensureValidSecondMeSession();
+  return addSecondMeNote(session.accessToken, payload);
 }
 
 export function mapSecondMeErrorMessage(error: unknown) {

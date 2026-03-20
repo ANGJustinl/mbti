@@ -1,9 +1,9 @@
-import Link from "next/link";
-
 import { isDemoRequested, resolveCurrentUserContext } from "../../lib/current-user";
 import { getDemoIntent, getTopTopics } from "../../lib/demo";
-import { getProfileByUserId, listCandidateCards } from "../../lib/workflow";
+import { AppLink } from "../_components/app-link";
+import { getPlazaListing, getProfileByUserId, listCandidateCards, listPlazaFeed } from "../../lib/workflow";
 import { MatchLauncher } from "./match-launcher";
+import { PlazaLauncher } from "./plaza-launcher";
 
 export const dynamic = "force-dynamic";
 
@@ -24,42 +24,59 @@ export default async function MatchPage({ searchParams }: PageProps) {
     return (
       <main className="stack">
         <section className="hero-panel">
-          <span className="eyebrow">匹配主链路</span>
-          <h1 className="hero-title">先连接当前身份，再发起第一场 Agent 双盲沙盘。</h1>
-          <p className="lead">匹配会话会绑定到当前用户，你可以之后从“我的流程”继续推进。</p>
+          <span className="eyebrow">协作匹配</span>
+          <h1 className="hero-title">先确认你此刻认可的身份进入这里。</h1>
+          <p className="lead">后面的匹配、沙盘和说明，都会跟着这个版本的你继续。</p>
           <div className="action-row section">
-            <Link href="/api/auth/login?next=/match" className="cta-link">
+            <AppLink href="/api/auth/login?next=/match" className="cta-link">
               连接 Second Me
-            </Link>
+            </AppLink>
           </div>
         </section>
       </main>
     );
   }
 
-  const [intent, profile, candidates, topics] = await Promise.all([
-    Promise.resolve(getDemoIntent()),
-    getProfileByUserId(currentUser.userId),
-    listCandidateCards(),
-    getTopTopics(),
-  ]);
+  const profile = await getProfileByUserId(currentUser.userId);
 
   if (!profile) {
     return (
       <main className="stack">
         <section className="hero-panel">
-          <span className="eyebrow">匹配主链路</span>
-          <h1 className="hero-title">先完成测评，系统才能知道你适合和谁一起成事。</h1>
-          <p className="lead">当前身份已建立，但还没有双核画像。先补测评，再进入沙盘。</p>
+          <span className="eyebrow">协作匹配</span>
+          <h1 className="hero-title">这不是为了定义你，只是为了看看你如何工作。</h1>
+          <p className="lead">你的工作方式会被轻轻放进当前身份里，成为后续判断的起点。之后的匹配与推演，都会从这里开始。</p>
           <div className="action-row section">
-            <Link href={currentUser.demoMode ? "/assessment?demo=1" : "/assessment"} className="cta-link">
-              去做 W-MBTI 测评
-            </Link>
+            <AppLink href={currentUser.demoMode ? "/assessment?demo=1" : "/assessment"} className="cta-link">
+              先完成 W-MBTI 测评
+            </AppLink>
           </div>
         </section>
       </main>
     );
   }
+
+  if (!currentUser.demoMode) {
+    const [listing, feed] = await Promise.all([
+      getPlazaListing(currentUser.userId),
+      listPlazaFeed(currentUser.userId),
+    ]);
+
+    return (
+      <PlazaLauncher
+        currentUser={currentUser}
+        profile={profile}
+        initialListing={listing}
+        initialFeed={feed}
+      />
+    );
+  }
+
+  const [intent, candidates, topics] = await Promise.all([
+    Promise.resolve(getDemoIntent()),
+    listCandidateCards(),
+    getTopTopics(),
+  ]);
 
   return (
     <MatchLauncher

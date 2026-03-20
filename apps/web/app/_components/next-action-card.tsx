@@ -1,6 +1,5 @@
-import Link from "next/link";
-
 import type { EntryAction } from "../../lib/entry-view";
+import { AppLink } from "./app-link";
 
 interface NextActionCardProps {
   action: EntryAction;
@@ -17,13 +16,13 @@ export function NextActionCard({ action }: NextActionCardProps) {
       <p className="lead">{action.description}</p>
       {action.note ? <p className="action-note">{action.note}</p> : null}
       <div className="action-row section">
-        <Link href={action.primaryHref} className="cta-link">
+        <AppLink href={action.primaryHref} className="cta-link">
           {action.primaryLabel}
-        </Link>
+        </AppLink>
         {action.secondaryHref && action.secondaryLabel ? (
-          <Link href={action.secondaryHref} className="ghost-link">
+          <AppLink href={action.secondaryHref} className="ghost-link">
             {action.secondaryLabel}
-          </Link>
+          </AppLink>
         ) : null}
       </div>
     </aside>

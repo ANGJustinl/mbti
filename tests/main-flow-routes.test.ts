@@ -15,7 +15,6 @@ import { POST as startMatchRoute } from "../apps/web/app/api/match/start/route";
 import { POST as advanceRoundRoute } from "../apps/web/app/api/sandbox/round/route";
 import { POST as finalizeRoute } from "../apps/web/app/api/sandbox/finalize/route";
 import { POST as reconnectRoute } from "../apps/web/app/api/reconnect/confirm/route";
-import { POST as drawRoute } from "../apps/web/app/api/draw/route";
 
 async function buildAnswers() {
   const questions = await loadQuestions();
@@ -171,25 +170,5 @@ describe("main flow routes", () => {
     expect(secondReconnect.status).toBe(200);
     expect(secondPayload.data?.state).toBe("exchanged");
     expect(secondPayload.data?.cards.every((card) => card.contactValue)).toBe(true);
-  });
-
-  it("validates draw input", async () => {
-    const failed = await drawRoute(
-      new Request("http://localhost/api/draw", {
-        method: "POST",
-        body: JSON.stringify({}),
-      }),
-    );
-    expect(failed.status).toBe(400);
-
-    const passed = await drawRoute(
-      new Request("http://localhost/api/draw", {
-        method: "POST",
-        body: JSON.stringify({
-          mood: "卡住了",
-        }),
-      }),
-    );
-    expect(passed.status).toBe(200);
   });
 });

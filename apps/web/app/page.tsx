@@ -7,7 +7,7 @@ import { buildHomeEntryViewModel } from "../lib/entry-view";
 import { resolveCurrentUserContext, isDemoRequested } from "../lib/current-user";
 import { getTopTopics } from "../lib/demo";
 import { getQueryValue, withDemoQuery } from "../lib/route-utils";
-import { getCurrentUserProfile, listCandidateCards, listUserSessions } from "../lib/workflow";
+import { getCurrentUserProfile, listCandidateCards, listPlazaFeed, listUserSessions } from "../lib/workflow";
 
 export const dynamic = "force-dynamic";
 
@@ -45,8 +45,9 @@ export default async function HomePage({ searchParams }: PageProps) {
     demoRequested: isDemoRequested(getQueryValue(query.demo)),
   });
 
-  const [candidates, topics, profilePayload, groups] = await Promise.all([
+  const [candidates, plazaFeed, topics, profilePayload, groups] = await Promise.all([
     listCandidateCards(),
+    currentUser && !currentUser.demoMode ? listPlazaFeed(currentUser.userId) : Promise.resolve([]),
     getTopTopics(),
     currentUser?.hasProfile ? getCurrentUserProfile(currentUser.userId) : Promise.resolve(null),
     currentUser ? listUserSessions(currentUser.userId) : Promise.resolve({
@@ -63,7 +64,7 @@ export default async function HomePage({ searchParams }: PageProps) {
     groups,
   });
 
-  const spotlightCard = profilePayload?.card ?? candidates[0];
+  const spotlightCard = profilePayload?.card ?? plazaFeed[0]?.listing.card ?? candidates[0];
   if (!spotlightCard) {
     throw new Error("featured card not found");
   }
@@ -119,7 +120,7 @@ export default async function HomePage({ searchParams }: PageProps) {
               ))}
             </div>
             <Link
-              href={withDemoQuery(`/card/${spotlightCard.profile.userId}`, Boolean(currentUser?.demoMode))}
+              href={withDemoQuery(`/card/${encodeURIComponent(spotlightCard.profile.userId)}`, Boolean(currentUser?.demoMode))}
               className="ghost-link section"
             >
               查看完整双核名片
@@ -151,11 +152,15 @@ export default async function HomePage({ searchParams }: PageProps) {
 
       <section className="split-grid section">
         <ProofRail
-          eyebrow="候选搭子"
+          eyebrow={plazaFeed.length > 0 ? "公开广场" : "候选搭子"}
           title="先看协作张力，而不是先看社交名片。"
-          description="预置候选对象覆盖不同的执行节奏、决策风格和沟通偏好，方便你快速理解这套匹配机制会在哪些地方产生火花或摩擦。"
+          description={
+            plazaFeed.length > 0
+              ? "已经进入公开广场的真实用户，会先露出双核预览，再决定要不要让 A2A 继续替双方试探。"
+              : "预置候选对象覆盖不同的执行节奏、决策风格和沟通偏好，方便你快速理解这套机制会在哪些地方产生火花或摩擦。"
+          }
         >
-          {candidates.map((candidate) => (
+          {(plazaFeed.length > 0 ? plazaFeed.map((item) => item.listing.card) : candidates).map((candidate) => (
             <article key={candidate.profile.userId} className="card-block proof-card">
               <div className="pair-line">
                 <span className="chip">{candidate.profile.wmti.letters}</span>
@@ -166,7 +171,7 @@ export default async function HomePage({ searchParams }: PageProps) {
                 {candidate.profile.lifeModeTitle} / {candidate.profile.workModeTitle}
               </p>
               <Link
-                href={withDemoQuery(`/card/${candidate.profile.userId}`, Boolean(currentUser?.demoMode))}
+                href={withDemoQuery(`/card/${encodeURIComponent(candidate.profile.userId)}`, Boolean(currentUser?.demoMode))}
                 className="ghost-link section"
               >
                 查看名片

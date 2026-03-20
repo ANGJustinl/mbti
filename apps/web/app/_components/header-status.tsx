@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { AppLink } from "./app-link";
 
 interface HeaderStatusProps {
   currentUser: {
@@ -39,30 +39,30 @@ export function HeaderStatus({ currentUser, isDevelopment }: HeaderStatusProps) 
         <span className="pill-link identity-pill">
           {currentUser.source === "secondme" ? "已连接" : "当前身份"} {currentUser.displayName}
         </span>
-        <Link href="/api/auth/logout" className="pill-link">
+        <AppLink href="/api/auth/logout" className="pill-link">
           退出
-        </Link>
+        </AppLink>
       </>
     );
   }
 
   return (
     <>
-      <Link href="/api/auth/login?next=/me" className="pill-link">
+      <AppLink href="/api/auth/login?next=/me" className="pill-link">
         连接 Second Me
-      </Link>
+      </AppLink>
       {demoMode ? (
         <>
           <span className="pill-link dev-pill">开发演示中</span>
-          <Link href={buildModeHref(pathname, searchParams, false)} className="pill-link">
+          <AppLink href={buildModeHref(pathname, searchParams, false)} className="pill-link">
             返回正式入口
-          </Link>
+          </AppLink>
         </>
       ) : null}
       {!demoMode && isDevelopment ? (
-        <Link href={buildModeHref(pathname, searchParams, true)} className="pill-link">
+        <AppLink href={buildModeHref(pathname, searchParams, true)} className="pill-link">
           开发演示
-        </Link>
+        </AppLink>
       ) : null}
     </>
   );

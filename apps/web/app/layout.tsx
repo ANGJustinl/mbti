@@ -16,8 +16,7 @@ const navItems = [
   { href: "/", label: "首页" },
   { href: "/me", label: "我的流程" },
   { href: "/assessment", label: "测评" },
-  { href: "/match", label: "匹配" },
-  { href: "/draw", label: "抽卡" },
+  { href: "/match", label: "广场" },
 ];
 
 export default async function RootLayout({
@@ -38,7 +37,7 @@ export default async function RootLayout({
             <Link href="/" className="brandmark">
               <span className="brandmark-kicker">SECOND ME A2A x 知乎职场语境</span>
               <strong>双核职场</strong>
-              <span className="brandmark-copy">先验证协作兼容性，再决定要不要进入现实连接。</span>
+              <span className="brandmark-copy">在现实相遇之前，先让工作方式替你们说一次话。</span>
             </Link>
             <nav className="nav-row">
               {navItems.map((item) => (

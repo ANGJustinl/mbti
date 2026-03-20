@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { startTransition, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { CollaborationManual, SandboxSession } from "@dual-core/domain";
 
@@ -48,7 +48,7 @@ const recommendationLabel = {
 
 export function ArenaConsole({ currentUser, initialSession }: ArenaConsoleProps) {
   const [session, setSession] = useState(initialSession);
-  const [manualReady, setManualReady] = useState(false);
+  const [manualReady, setManualReady] = useState(Boolean(initialSession.manualReady));
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,79 +58,75 @@ export function ArenaConsole({ currentUser, initialSession }: ArenaConsoleProps)
   );
 
   const nextRound = session.currentRound + 1;
-  const canAdvance = session.currentRound < 3 && !pending;
+  const canAdvance = session.source === "demo" && session.currentRound < 3 && !pending;
   const canFinalize = session.currentRound >= 3 && !manualReady && !pending;
   const canReconnect = manualReady && session.state !== "filtered_out";
   const recommendation = getRecommendationInsight(session.recommendation);
 
-  function advance() {
+  async function advance() {
     setPending(true);
     setError(null);
 
-    startTransition(async () => {
-      try {
-        const response = await fetch(withDemoQuery("/api/sandbox/round", currentUser.demoMode), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            sessionId: session.sessionId,
-            roundIndex: nextRound,
-          }),
-        });
+    try {
+      const response = await fetch(withDemoQuery("/api/sandbox/round", currentUser.demoMode), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sessionId: session.sessionId,
+          roundIndex: nextRound,
+        }),
+      });
 
-        const payload = (await response.json()) as RoundPayload;
-        if (payload.status === "error") {
-          setError(payload.error.message);
-          setPending(false);
-          return;
-        }
-
-        setSession((current) => ({
-          ...current,
-          state: payload.data.state,
-          currentRound: payload.data.round.roundIndex,
-        }));
+      const payload = (await response.json()) as RoundPayload;
+      if (payload.status === "error") {
+        setError(payload.error.message);
         setPending(false);
-      } catch (caught) {
-        setError(caught instanceof Error ? caught.message : "推进沙盘失败");
-        setPending(false);
+        return;
       }
-    });
+
+      setSession((current) => ({
+        ...current,
+        state: payload.data.state,
+        currentRound: payload.data.round.roundIndex,
+      }));
+      setPending(false);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "推进沙盘失败");
+      setPending(false);
+    }
   }
 
-  function finalize() {
+  async function finalize() {
     setPending(true);
     setError(null);
 
-    startTransition(async () => {
-      try {
-        const response = await fetch(withDemoQuery("/api/sandbox/finalize", currentUser.demoMode), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            sessionId: session.sessionId,
-          }),
-        });
+    try {
+      const response = await fetch(withDemoQuery("/api/sandbox/finalize", currentUser.demoMode), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sessionId: session.sessionId,
+        }),
+      });
 
-        const payload = (await response.json()) as FinalizePayload;
-        if (payload.status === "error") {
-          setError(payload.error.message);
-          setPending(false);
-          return;
-        }
-
-        setSession(payload.data.session);
-        setManualReady(true);
+      const payload = (await response.json()) as FinalizePayload;
+      if (payload.status === "error") {
+        setError(payload.error.message);
         setPending(false);
-      } catch (caught) {
-        setError(caught instanceof Error ? caught.message : "生成说明书失败");
-        setPending(false);
+        return;
       }
-    });
+
+      setSession(payload.data.session);
+      setManualReady(Boolean(payload.data.session.manualReady ?? true));
+      setPending(false);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "生成说明书失败");
+      setPending(false);
+    }
   }
 
   return (
@@ -140,6 +136,19 @@ export function ArenaConsole({ currentUser, initialSession }: ArenaConsoleProps)
           <span className="eyebrow">A2A 赛博沙盘</span>
           <h1 className="hero-title">{session.topic.title}</h1>
           <p className="lead">{session.topic.prompt}</p>
+          <p className="muted">
+            {session.source === "plaza"
+              ? "这次协商已经在后台替你们跑完。现在看到的，是双方如何碰撞、让步与定边界。"
+              : "别急着交换联系方式，先让两个版本的你们在问题里相遇。"}
+          </p>
+          {session.secondMeEvidenceSummary ? (
+            <div className="pair-line section">
+              <span className="chip">Second Me</span>
+              <span className="muted">
+                {session.secondMeEvidenceSummary.usedCalibration ? "本局预演参考了复核画像" : "本局预演参考了协作侧写"}
+              </span>
+            </div>
+          ) : null}
           <div className="pill-row section">
             {session.topic.riskTags.map((tag) => (
               <span key={tag} className="chip">
@@ -167,6 +176,10 @@ export function ArenaConsole({ currentUser, initialSession }: ArenaConsoleProps)
             <div className="pair-line">
               <span className="chip">已推进回合</span>
               <span className="muted">{session.currentRound} / 3</span>
+            </div>
+            <div className="pair-line">
+              <span className="chip">当前模式</span>
+              <span className="muted">{session.source === "plaza" ? "公开广场自动协商" : "开发演示手动推进"}</span>
             </div>
             {session.conflictFlags.length > 0 ? (
               session.conflictFlags.map((flag) => {
@@ -200,7 +213,7 @@ export function ArenaConsole({ currentUser, initialSession }: ArenaConsoleProps)
             ) : null}
             {canFinalize ? (
               <button type="button" className="cta-link button-link" onClick={finalize}>
-                生成协作说明书
+                {session.source === "plaza" ? "基于协商回放生成协作说明书" : "生成协作说明书"}
               </button>
             ) : null}
             {canReconnect ? (
@@ -209,7 +222,7 @@ export function ArenaConsole({ currentUser, initialSession }: ArenaConsoleProps)
               </Link>
             ) : null}
             {manualReady && session.state === "filtered_out" ? (
-              <span className="danger helper-text">本轮已触发排雷，系统建议终止连接。</span>
+              <span className="danger helper-text">有些摩擦适合现在被看见，而不是留到真正靠近之后。</span>
             ) : null}
             <Link href={withDemoQuery("/me", currentUser.demoMode)} className="ghost-link">
               返回我的流程中心
@@ -223,13 +236,23 @@ export function ArenaConsole({ currentUser, initialSession }: ArenaConsoleProps)
         {visibleRounds.length === 0 ? (
           <article className="panel">
             <span className="eyebrow">尚未开始</span>
-            <p className="lead">点击右侧按钮，开始第一轮 Agent 交锋。</p>
+            <p className="lead">这不是一次结果展示，而是提前看见真实协作里的摩擦、误解与可能。</p>
           </article>
         ) : null}
         {visibleRounds.map((round) => (
           <article key={round.roundIndex} className="round-card">
-            <span className="eyebrow">Round {round.roundIndex}</span>
-            <h3>{round.question}</h3>
+            <div className="pair-line">
+              <span className="eyebrow">Round {round.roundIndex}</span>
+              <span className="chip">
+                {round.roundType === "positioning"
+                  ? "立场确认"
+                  : round.roundType === "negotiation"
+                    ? "冲突协商"
+                    : "规则敲定"}
+              </span>
+            </div>
+            <h3>{round.issue}</h3>
+            <p className="muted">{round.question}</p>
             <div className="stack section">
               <div>
                 <strong>Agent A</strong>
@@ -243,6 +266,22 @@ export function ArenaConsole({ currentUser, initialSession }: ArenaConsoleProps)
                 <strong>系统观察</strong>
                 <p className="muted">{round.observerNote}</p>
               </div>
+              <div>
+                <strong>张力点</strong>
+                <p className="muted">{round.tensionPoint}</p>
+              </div>
+              <div>
+                <strong>让步</strong>
+                <p className="muted">{round.concession}</p>
+              </div>
+              <div>
+                <strong>边界</strong>
+                <p className="muted">{round.boundary}</p>
+              </div>
+              <div>
+                <strong>阶段综合</strong>
+                <p className="muted">{round.synthesis}</p>
+              </div>
             </div>
             <div className="subtle-divider" />
             <div className="pair-line">
@@ -253,14 +292,6 @@ export function ArenaConsole({ currentUser, initialSession }: ArenaConsoleProps)
         ))}
       </section>
 
-      <section className="panel">
-        <span className="eyebrow">旁路入口</span>
-        <div className="action-row">
-          <Link href={withDemoQuery("/draw", currentUser.demoMode)} className="ghost-link">
-            先去抽一张灵感卡
-          </Link>
-        </div>
-      </section>
     </main>
   );
 }

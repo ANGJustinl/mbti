@@ -2,11 +2,12 @@ import Link from "next/link";
 
 import { EntryHero } from "../_components/entry-hero";
 import { NextActionCard } from "../_components/next-action-card";
+import { SecondMeWritebackPanel } from "../_components/secondme-writeback-panel";
 import { SessionList } from "../_components/session-list";
 import { buildWorkspaceViewModel } from "../../lib/entry-view";
 import { isDemoRequested, isDevelopmentMode, resolveCurrentUserContext } from "../../lib/current-user";
 import { getQueryValue, withDemoQuery } from "../../lib/route-utils";
-import { getCurrentUserProfile, listUserSessions } from "../../lib/workflow";
+import { getCurrentUserProfile, getPlazaWorkspace, getSecondMeWorkspaceStatus, listUserSessions } from "../../lib/workflow";
 
 export const dynamic = "force-dynamic";
 
@@ -27,9 +28,9 @@ export default async function MePage({ searchParams }: PageProps) {
         <section className="hero-grid entry-grid">
           <EntryHero
             eyebrow="我的流程中心"
-            title="把测评、沙盘和协作说明书都收回到一个持续可恢复的身份里。"
-            description="连接 Second Me 后，你的主链路会跟随当前身份连续保存。这里不会只展示结果，而是会一直告诉你下一步该做什么。"
-            statusLine="未绑定当前身份"
+            title="先确认你此刻认可的身份进入这里。"
+            description="后面的测评、沙盘和说明，都会跟着这个版本的你继续。"
+            statusLine="尚未确认身份"
             metrics={[
               {
                 label: "流程恢复",
@@ -54,14 +55,14 @@ export default async function MePage({ searchParams }: PageProps) {
                 : []),
             ]}
           >
-            <p className="workspace-note">双核职场不是在判断你是哪一类人，而是在提前验证你和谁适合一起成事。</p>
+            <p className="workspace-note">这里保存的，不只是结果，还有这个阶段正在前进的你。</p>
           </EntryHero>
 
           <NextActionCard
             action={{
               eyebrow: "下一步动作",
-              title: "先绑定一个当前身份，再开始你的协作工作台。",
-              description: "你一旦完成连接，后续的 W-MBTI、沙盘记录、说明书与数字名片都会直接挂在这个身份下面。",
+              title: "先确认你此刻认可的身份进入这里。",
+              description: "后面的测评、沙盘和说明，都会跟着这个版本的你继续。",
               primaryLabel: "连接 Second Me",
               primaryHref: "/api/auth/login?next=/me",
               secondaryLabel: isDevelopmentMode() ? "使用开发演示" : undefined,
@@ -74,9 +75,11 @@ export default async function MePage({ searchParams }: PageProps) {
     );
   }
 
-  const [profilePayload, groups] = await Promise.all([
+  const [profilePayload, groups, secondMeStatus, plazaWorkspace] = await Promise.all([
     currentUser.hasProfile ? getCurrentUserProfile(currentUser.userId) : Promise.resolve(null),
     listUserSessions(currentUser.userId),
+    getSecondMeWorkspaceStatus(currentUser.userId),
+    currentUser.demoMode ? Promise.resolve(null) : getPlazaWorkspace(currentUser.userId),
   ]);
 
   const view = buildWorkspaceViewModel({
@@ -118,6 +121,68 @@ export default async function MePage({ searchParams }: PageProps) {
 
         <div className="stack">
           <NextActionCard action={view.nextAction} />
+          {!currentUser.demoMode && plazaWorkspace ? (
+            <article className="panel">
+              <div className="pair-line">
+                <span className="eyebrow">我的广场状态</span>
+                <span className="chip">{plazaWorkspace.listing?.enabled ? "已公开" : "未公开"}</span>
+              </div>
+              <h2>{plazaWorkspace.listing?.enabled ? "你的双核预览正在公开广场里流动" : "你还没有进入公开广场"}</h2>
+              <p className="muted">
+                {plazaWorkspace.listing?.enabled
+                  ? plazaWorkspace.listing.headline
+                  : "进入广场后，其他已完成测评的真实用户才能先看到你的协作像，再决定要不要发起互选。"}
+              </p>
+              <div className="detail-grid section">
+                <article className="metric-card">
+                  <span className="eyebrow">等待回应</span>
+                  <strong className="stat-number">{plazaWorkspace.outgoing.length}</strong>
+                  <span className="stat-label">你已经发起，但对方还没回看的协作意向</span>
+                </article>
+                <article className="metric-card">
+                  <span className="eyebrow">别人看中你</span>
+                  <strong className="stat-number">{plazaWorkspace.incoming.length}</strong>
+                  <span className="stat-label">有人已经先发起意向，等你决定要不要回看</span>
+                </article>
+                <article className="metric-card">
+                  <span className="eyebrow">互选成功</span>
+                  <strong className="stat-number">{plazaWorkspace.mutual.length}</strong>
+                  <span className="stat-label">互选成立后，A2A 会先在后台生成协商回放</span>
+                </article>
+              </div>
+              <Link href="/match" className="ghost-link section">
+                进入公开广场
+              </Link>
+            </article>
+          ) : null}
+          {currentUser.source === "secondme" ? (
+            <article className="panel">
+              <div className="pair-line">
+                <span className="eyebrow">Second Me 状态</span>
+                <span className="chip">
+                  {secondMeStatus.profileSyncedAt ? "已同步画像" : "待同步"}
+                </span>
+              </div>
+              <h2>分身画像与记忆状态</h2>
+              <p className="muted">
+                {secondMeStatus.profileSyncedAt
+                  ? `最近一次画像同步：${new Date(secondMeStatus.profileSyncedAt).toLocaleString("zh-CN")}`
+                  : "当前还没有可用的 Second Me 画像快照。完成测评或刷新授权后会自动同步。"}
+              </p>
+              <div className="detail-grid section">
+                <article className="metric-card">
+                  <span className="eyebrow">待写回</span>
+                  <strong className="stat-number">{secondMeStatus.pendingWritebacks.length}</strong>
+                  <span className="stat-label">需要你逐次确认是否写回分身记忆</span>
+                </article>
+                <article className="metric-card">
+                  <span className="eyebrow">最近结果</span>
+                  <strong className="stat-number">{secondMeStatus.recentWritebacks.length}</strong>
+                  <span className="stat-label">会保留最近几次写回的状态，方便恢复处理</span>
+                </article>
+              </div>
+            </article>
+          ) : null}
           <article className="panel spotlight-panel">
             <div className="pair-line">
               <span className="eyebrow">我的双核名片</span>
@@ -134,7 +199,7 @@ export default async function MePage({ searchParams }: PageProps) {
                   </div>
                 ))}
                 <Link
-                  href={withDemoQuery(`/card/${currentUser.userId}`, currentUser.demoMode)}
+                  href={withDemoQuery(`/card/${encodeURIComponent(currentUser.userId)}`, currentUser.demoMode)}
                   className="ghost-link section"
                 >
                   查看完整双核名片
@@ -151,6 +216,71 @@ export default async function MePage({ searchParams }: PageProps) {
           </article>
         </div>
       </section>
+
+      {!currentUser.demoMode && plazaWorkspace ? (
+        <>
+          <section className="split-grid section">
+            <article className="panel">
+            <span className="eyebrow">等待对方回应</span>
+            {plazaWorkspace.outgoing.length === 0 ? (
+              <p className="muted section">你还没有发出新的协作意向，或者对方都已经回看过了。</p>
+            ) : (
+              <div className="stack section">
+                {plazaWorkspace.outgoing.map((item) => (
+                  <article key={item.signalId} className="card-block">
+                    <h3>{item.counterpart.name}</h3>
+                    <p className="muted">{item.headline}</p>
+                    <span className="chip">等待对方互选</span>
+                  </article>
+                ))}
+              </div>
+            )}
+            </article>
+            <article className="panel">
+              <span className="eyebrow">别人正在看你</span>
+              {plazaWorkspace.incoming.length === 0 ? (
+                <p className="muted section">当前还没有新的 incoming 意向。公开广场打开后，这里会先出现等你回应的协作试探。</p>
+              ) : (
+                <div className="stack section">
+                  {plazaWorkspace.incoming.map((item) => (
+                    <article key={item.signalId} className="card-block">
+                      <h3>{item.counterpart.name}</h3>
+                      <p className="muted">{item.headline}</p>
+                      <Link href={`/card/${encodeURIComponent(item.counterpart.userId)}`} className="ghost-link section">
+                        先看对方双核名片
+                      </Link>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </article>
+          </section>
+          <section className="section">
+            <article className="panel">
+              <span className="eyebrow">A2A 协商已生成</span>
+              {plazaWorkspace.mutual.length === 0 ? (
+                <p className="muted section">一旦双方互选成功，系统会把三段协商回放先生成在这里。</p>
+              ) : (
+                <div className="card-grid section">
+                  {plazaWorkspace.mutual.map((item) => (
+                    <article key={item.signalId} className="card-block">
+                      <h3>{item.counterpart.name}</h3>
+                      <p className="muted">{item.headline}</p>
+                      {item.sessionId ? (
+                        <Link href={`/arena/${item.sessionId}`} className="ghost-link section">
+                          查看协商回放
+                        </Link>
+                      ) : (
+                        <span className="chip">等待回放落库</span>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </article>
+          </section>
+        </>
+      ) : null}
 
       <section className="split-grid section">
         <SessionList
@@ -172,6 +302,14 @@ export default async function MePage({ searchParams }: PageProps) {
           variant="reconnect_ready"
         />
       </section>
+
+      <SecondMeWritebackPanel
+        currentUser={currentUser}
+        pending={secondMeStatus.pendingWritebacks}
+        recent={secondMeStatus.recentWritebacks}
+        eyebrow="Second Me 记忆写回"
+        title="这里会保留所有待处理的 Second Me 写回事项"
+      />
 
       <section className="split-grid section">
         <SessionList

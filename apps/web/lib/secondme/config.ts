@@ -47,7 +47,13 @@ function loadEnvFromFiles() {
 }
 
 function readEnv(name: string) {
-  return process.env[name] ?? loadEnvFromFiles()[name];
+  const value = process.env[name] ?? loadEnvFromFiles()[name];
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : undefined;
 }
 
 export class MissingSecondMeConfigError extends Error {

@@ -40,6 +40,7 @@ function createCurrentUser(overrides?: Partial<CurrentUserContext>): CurrentUser
 function createSession(state: SessionSummary["state"]): SessionSummary {
   return {
     sessionId: "session-1",
+    source: "demo",
     state,
     currentRound: state === "sandboxing" ? 1 : 3,
     fitScore: 62,
@@ -73,6 +74,7 @@ describe("entry view models", () => {
     });
 
     expect(view.mode).toBe("anonymous");
+    expect(view.title).toBe("我们想知道的，不是你像谁，而是你适合和谁一起把事情做成。");
     expect(view.nextAction.primaryLabel).toBe("连接 Second Me");
     expect(view.nextAction.secondaryLabel).toBe("先看 W-MBTI 测评");
     expect(view.description).not.toContain("继续往真实用户上下文推进");
@@ -90,7 +92,7 @@ describe("entry view models", () => {
     });
 
     expect(view.mode).toBe("ready");
-    expect(view.nextAction.primaryLabel).toBe("继续沙盘");
+    expect(view.nextAction.primaryLabel).toBe("查看协商回放");
     expect(view.nextAction.badge).toBe("进行中的沙盘");
     expect(view.nextAction.primaryHref).toContain("/arena/session-1");
   });
@@ -105,7 +107,8 @@ describe("entry view models", () => {
       groups: createEmptyGroups(),
     });
 
-    expect(view.nextAction.primaryLabel).toBe("开始 W-MBTI 测评");
+    expect(view.nextAction.title).toBe("这不是为了定义你，只是为了看看你如何工作。");
+    expect(view.nextAction.primaryLabel).toBe("先完成 W-MBTI 测评");
     expect(view.nextAction.badge).toBe("待完成画像");
     expect(view.demoNote).toContain("开发演示");
   });

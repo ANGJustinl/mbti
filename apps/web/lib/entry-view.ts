@@ -113,8 +113,8 @@ function buildReadyAction(groups: UserSessionGroups, demoMode: boolean): EntryAc
       eyebrow: "下一步动作",
       title: "画像已经就位，可以开始新的协作试探。",
       description:
-        "先发起一场 1 对 1 沙盘，让双方 Agent 围绕真实职场议题跑完第一轮合作预演。",
-      primaryLabel: "发起新的匹配",
+        "先进入公开广场，让其他真实用户先看到你的双核预览；一旦互选成功，A2A 会自动替你们跑完第一段协商。",
+      primaryLabel: "进入公开广场",
       primaryHref: withDemoQuery("/match", demoMode),
       secondaryLabel: "回到我的流程中心",
       secondaryHref: withDemoQuery("/me", demoMode),
@@ -140,10 +140,10 @@ function buildReadyAction(groups: UserSessionGroups, demoMode: boolean): EntryAc
   if (priority.session.state === "matched" || priority.session.state === "sandboxing") {
     return {
       eyebrow: "下一步动作",
-      title: "你的沙盘还在进行中。",
+      title: "你的 A2A 协商回放已经就位。",
       description:
-        "继续推进回合，让 Agent 把价值观、执行节奏和风险承受方式先试探一遍，再决定是否进入 Reconnect。",
-      primaryLabel: "继续沙盘",
+        "先看完双方如何碰撞、让步与定边界，再决定要不要生成说明书并进入 Reconnect。",
+      primaryLabel: "查看协商回放",
       primaryHref: getSessionHref(priority.session, demoMode),
       secondaryLabel: "查看我的流程中心",
       secondaryHref: withDemoQuery("/me", demoMode),
@@ -156,10 +156,10 @@ function buildReadyAction(groups: UserSessionGroups, demoMode: boolean): EntryAc
     return {
       eyebrow: "下一步动作",
       title: "最近一条连接已经落地，可以继续扩展新的协作对象。",
-      description: "回看已完成连接的说明书，或者开启下一次匹配，继续寻找更合适的长期搭子。",
+      description: "回看已完成连接的说明书，或者重新回到公开广场，继续寻找更合适的长期搭子。",
       primaryLabel: "查看已完成连接",
       primaryHref: getSessionHref(priority.session, demoMode),
-      secondaryLabel: "发起新的匹配",
+      secondaryLabel: "回到公开广场",
       secondaryHref: withDemoQuery("/match", demoMode),
       badge: priority.label,
       note: `最近连接：${priority.session.counterpart.name}`,
@@ -168,11 +168,11 @@ function buildReadyAction(groups: UserSessionGroups, demoMode: boolean): EntryAc
 
   return {
     eyebrow: "下一步动作",
-    title: "上一轮排雷已经完成，下一次匹配可以更快切入重点。",
-    description: "系统已经帮你提前识别过高风险组合。复盘这次冲突后，再决定要不要发起新的试探。",
+    title: "上一轮排雷已经完成，下一次试探可以更快切入重点。",
+    description: "系统已经帮你提前识别过高风险组合。复盘这次冲突后，再决定要不要回到公开广场发起新的试探。",
     primaryLabel: "查看排雷复盘",
     primaryHref: getSessionHref(priority.session, demoMode),
-    secondaryLabel: "发起新的匹配",
+    secondaryLabel: "回到公开广场",
     secondaryHref: withDemoQuery("/match", demoMode),
     badge: priority.label,
     note: `最近复盘：${priority.session.counterpart.name}`,
@@ -195,10 +195,10 @@ export function buildHomeEntryViewModel(input: {
     return {
       mode: "anonymous",
       eyebrow: "Dual Core Workplace",
-      title: "不是测你是谁，是提前验证你和谁能一起成事。",
+      title: "我们想知道的，不是你像谁，而是你适合和谁一起把事情做成。",
       description:
-        "双核职场把 W-MBTI、Agent 双盲沙盘、知乎职场题和协作说明书串成一条真正可恢复的流程，在真人加微信前先把合作风险跑一遍。",
-      statusLine: "公共入口 / 未绑定当前身份",
+        "双核职场把 W-MBTI、Agent 双盲沙盘、知乎职场题和协作说明书串成一条真正可恢复的流程，让工作方式先替你们说一次话。",
+      statusLine: "公共入口 / 尚未确认身份",
       metrics: [
         {
           label: "W-MBTI",
@@ -218,8 +218,8 @@ export function buildHomeEntryViewModel(input: {
       ],
       nextAction: {
         eyebrow: "下一步动作",
-        title: "先连接一个当前身份，再开始你的第一轮验证。",
-        description: "连接 Second Me 后，测评、沙盘和说明书都会跟着这个身份连续保存，不再是一次性的试用体验。",
+        title: "先确认你此刻认可的身份进入这里。",
+        description: "后面的测评、沙盘和说明，都会跟着这个版本的你继续。",
         primaryLabel: "连接 Second Me",
         primaryHref: "/api/auth/login?next=/me",
         secondaryLabel: "先看 W-MBTI 测评",
@@ -228,7 +228,7 @@ export function buildHomeEntryViewModel(input: {
       },
       spotlightTitle: "示例双核档案",
       spotlightEyebrow: "信号面板",
-      proofIntro: "先用候选搭子和知乎修罗场题目，快速理解这条主链路如何工作。",
+      proofIntro: "先看公开广场里的双核预览和知乎修罗场题，快速理解这条主链路如何工作。",
     };
   }
 
@@ -236,9 +236,9 @@ export function buildHomeEntryViewModel(input: {
     return {
       mode: "needs_assessment",
       eyebrow: "当前身份已连接",
-      title: "先完成 W-MBTI，把你的工作方式校准到可协作的粒度。",
+      title: "这不是为了定义你，只是为了看看你如何工作。",
       description:
-        "只有把能量来源、信息处理、决策逻辑和执行节奏讲清楚，后面的沙盘与协作说明书才有意义。",
+        "你的工作方式会被轻轻放进当前身份里，成为后续判断的起点。之后的公开广场、A2A 协商与说明书都会从这里开始。",
       statusLine: currentUser.demoMode ? "开发演示 / 待完成画像" : "已连接 / 待完成画像",
       metrics: [
         {
@@ -249,7 +249,7 @@ export function buildHomeEntryViewModel(input: {
         {
           label: "画像状态",
           value: "TODO",
-          detail: "先完成 W-MBTI，后续匹配与沙盘才能解锁。",
+          detail: "先完成 W-MBTI，后续公开广场与 A2A 协商才能解锁。",
         },
         {
           label: "流程恢复",
@@ -259,9 +259,9 @@ export function buildHomeEntryViewModel(input: {
       ],
       nextAction: {
         eyebrow: "下一步动作",
-        title: "先做 W-MBTI，再让 Agent 替你试探外部世界。",
-        description: "测评结果会直接写入当前用户画像，成为匹配、沙盘、排雷和协作说明书的唯一前置条件。",
-        primaryLabel: "开始 W-MBTI 测评",
+        title: "这不是为了定义你，只是为了看看你如何工作。",
+        description: "你的工作方式会被轻轻放进当前身份里，成为后续判断的起点。之后的公开广场与协商都会从这里开始。",
+        primaryLabel: "先完成 W-MBTI 测评",
         primaryHref: withDemoQuery("/assessment", currentUser.demoMode),
         secondaryLabel: "进入我的流程中心",
         secondaryHref: withDemoQuery("/me", currentUser.demoMode),
@@ -277,9 +277,9 @@ export function buildHomeEntryViewModel(input: {
   return {
     mode: "ready",
     eyebrow: "当前流程已就位",
-    title: "画像已经落地，下一步是把合作风险前置到虚拟空间。",
+    title: "在现实相遇之前，先让工作方式替你们说一次话。",
     description:
-      "你已经有了自己的双核名片。现在真正重要的是让 Agent 替你把磨合成本提前跑掉，再决定这次连接值不值得进入现实协作。",
+      "你已经有了自己的双核名片。现在更重要的，是先替这段关系看一眼它会彼此放大，还是彼此消耗。",
     statusLine: currentUser.demoMode ? "开发演示 / 可恢复流程" : "已连接 / 可恢复流程",
     metrics: [
       {
@@ -290,7 +290,7 @@ export function buildHomeEntryViewModel(input: {
       {
         label: "流程记录",
         value: `${totalSessions}`,
-        detail: totalSessions > 0 ? "可以从首页或 /me 继续恢复现有会话。" : "还没有历史会话，可以直接发起新的匹配。",
+        detail: totalSessions > 0 ? "可以从首页或 /me 继续恢复现有会话。" : "还没有历史会话，可以先进入公开广场开始新的试探。",
       },
       {
         label: "待处理",
@@ -301,7 +301,7 @@ export function buildHomeEntryViewModel(input: {
     nextAction: buildReadyAction(groups, currentUser.demoMode),
     spotlightTitle: "你的当前双核档案",
     spotlightEyebrow: "信号面板",
-    proofIntro: "你已经具备进入沙盘的基础画像。候选搭子和知乎题池会决定这次试探的张力。",
+    proofIntro: "你已经具备进入公开广场的基础画像。双核预览和知乎题池会决定这次试探的张力。",
   };
 }
 
@@ -321,8 +321,8 @@ export function buildWorkspaceViewModel(input: {
     eyebrow: currentUser.demoMode ? "开发演示工作台" : "我的流程中心",
     title: currentUser.displayName,
     description: currentUser.needsAssessment
-      ? "先把当前身份补成一份可解释的协作画像，再进入匹配、沙盘与 Reconnect。"
-      : "这里是你的协作工作台。最重要的下一步动作会先被抬到首屏，其余流程都可以从这里继续恢复。",
+      ? "先把当前身份补成一份可解释的协作画像，再进入公开广场、A2A 协商与 Reconnect。"
+      : "这里保存的，不只是结果，还有这个阶段正在前进的你。每一次判断、每一次推演，都会慢慢沉淀成你可继续往前走的协作轨迹。",
     metrics: [
       {
         label: "身份来源",
@@ -343,9 +343,9 @@ export function buildWorkspaceViewModel(input: {
     nextAction: currentUser.needsAssessment || !profile
       ? {
           eyebrow: "最推荐下一步",
-          title: "先完成 W-MBTI，让后续匹配真正有根据。",
-          description: "测评结果会直接写入你的双核名片，并成为后续沙盘、排雷和说明书的唯一前置条件。",
-          primaryLabel: "开始 W-MBTI 测评",
+          title: "这不是为了定义你，只是为了看看你如何工作。",
+          description: "你的工作方式会被轻轻放进当前身份里，成为后续判断的起点。之后的公开广场与协商，都会从这里开始。",
+          primaryLabel: "先完成 W-MBTI 测评",
           primaryHref: withDemoQuery("/assessment", currentUser.demoMode),
           secondaryLabel: "先看看匹配入口",
           secondaryHref: withDemoQuery("/match", currentUser.demoMode),
@@ -363,7 +363,7 @@ export function buildWorkspaceViewModel(input: {
         eyebrow: "进行中的沙盘",
         title: "优先处理还没跑完的合作预演",
         emptyTitle: "当前没有进行中的沙盘。",
-        emptyDescription: "画像就绪后，你可以随时发起新的匹配，让 Agent 先替你试探价值观和执行方式。",
+        emptyDescription: "画像就绪后，你可以随时进入公开广场，让 Agent 先替你试探价值观和执行方式。",
       },
       reconnectReady: {
         eyebrow: "待确认 Reconnect",
@@ -379,7 +379,7 @@ export function buildWorkspaceViewModel(input: {
       },
       filteredOut: {
         eyebrow: "已终止连接",
-        title: "把排雷结果留作下一次匹配的参考",
+        title: "把排雷结果留作下一次试探的参考",
         emptyTitle: "目前没有被系统终止的连接。",
         emptyDescription: "如果系统发现不可调和的冲突，会在这里保留说明书和复盘记录。",
       },

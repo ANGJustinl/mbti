@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { startTransition, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { DebateTopic, DualCoreCard, MatchIntent, PersonalityProfile } from "@dual-core/domain";
 
@@ -52,37 +52,35 @@ export function MatchLauncher({
     [topicId, topics],
   );
 
-  function launch() {
+  async function launch() {
     setPending(true);
     setError(null);
 
-    startTransition(async () => {
-      try {
-        const response = await fetch(withDemoQuery("/api/match/start", currentUser.demoMode), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            targetProfileId,
-            topicId,
-          }),
-        });
+    try {
+      const response = await fetch(withDemoQuery("/api/match/start", currentUser.demoMode), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          targetProfileId,
+          topicId,
+        }),
+      });
 
-        const payload = (await response.json()) as MatchResponse;
-        if (payload.status === "error") {
-          setError(payload.error.message);
-          setPending(false);
-          return;
-        }
-
-        router.push(withDemoQuery(`/arena/${payload.data.session.sessionId}`, currentUser.demoMode));
-        router.refresh();
-      } catch (caught) {
-        setError(caught instanceof Error ? caught.message : "发起匹配失败");
+      const payload = (await response.json()) as MatchResponse;
+      if (payload.status === "error") {
+        setError(payload.error.message);
         setPending(false);
+        return;
       }
-    });
+
+      router.push(withDemoQuery(`/arena/${payload.data.session.sessionId}`, currentUser.demoMode));
+      router.refresh();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "发起匹配失败");
+      setPending(false);
+    }
   }
 
   return (
@@ -92,8 +90,10 @@ export function MatchLauncher({
           <span className="eyebrow">匹配意图</span>
           <h1 className="hero-title">{profile.lifeModeTitle}</h1>
           <p className="lead">
-            {currentUser.displayName}
-            希望找到能一起扛项目、扛冲突、扛长周期不确定性的协作搭子。
+            不是所有相遇都值得开始，我们先替你看一眼这段协作会不会彼此放大。
+          </p>
+          <p className="muted">
+            我们会沿着你们的工作方式，试着判断这段关系更互补，还是消耗。
           </p>
           <div className="detail-grid section">
             <div className="metric-card">
@@ -151,8 +151,9 @@ export function MatchLauncher({
               </select>
             </label>
             <button type="button" className="cta-link button-link" onClick={launch} disabled={pending}>
-              {pending ? "正在创建沙盘会话..." : "发起 Agent 双盲沙盘"}
+              {pending ? "正在让两个版本的你们先相遇..." : "让 Agent 先替你们相遇"}
             </button>
+            <p className="muted helper-text">别急着交换联系方式，先让两个版本的你们在问题里相遇。</p>
             {error ? <p className="danger helper-text">{error}</p> : null}
           </div>
         </aside>

@@ -22,6 +22,7 @@ export async function POST(request: Request) {
     await assertSessionActor(body.sessionId, currentUser.userId);
     const result = await finalizeSandboxSession({
       sessionId: body.sessionId,
+      userId: currentUser.userId,
     });
 
     return ok(result);

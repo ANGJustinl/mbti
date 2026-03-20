@@ -1,8 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --bg: #06111c;
   --bg-soft: #0b1a28;
-  --panel: rgba(10, 24, 39, 0.86);
-  --panel-strong: rgba(15, 34, 54, 0.96);
+  --panel: rgba(9, 23, 38, 0.82);
+  --panel-strong: rgba(15, 34, 54, 0.94);
   --line: rgba(255, 255, 255, 0.12);
   --line-strong: rgba(255, 255, 255, 0.22);
   --text: #edf4ff;
@@ -14,6 +18,8 @@
   --yellow: #ffd66b;
   --danger: #ff8c8c;
   --shadow: 0 28px 80px rgba(0, 0, 0, 0.3);
+  --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.18);
+  --glass: blur(18px);
 }
 
 * {
@@ -29,8 +35,9 @@ body {
   min-height: 100vh;
   color: var(--text);
   background:
-    radial-gradient(circle at top left, rgba(101, 210, 255, 0.16), transparent 22%),
-    radial-gradient(circle at top right, rgba(255, 122, 51, 0.18), transparent 28%),
+    radial-gradient(circle at 12% 0%, rgba(101, 210, 255, 0.16), transparent 24%),
+    radial-gradient(circle at 100% 0%, rgba(255, 122, 51, 0.18), transparent 28%),
+    radial-gradient(circle at 50% 100%, rgba(63, 196, 255, 0.08), transparent 30%),
     linear-gradient(180deg, #07111c 0%, #051019 48%, #030a12 100%);
   font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
 }
@@ -54,10 +61,13 @@ button {
 .page-shell {
   width: min(1220px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 24px 0 72px;
+  padding: 20px 0 88px;
 }
 
 .site-header {
+  position: sticky;
+  top: 12px;
+  z-index: 20;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -66,11 +76,12 @@ button {
   margin-bottom: 28px;
   padding: 18px 20px;
   border: 1px solid var(--line);
-  border-radius: 24px;
+  border-radius: 28px;
   background:
     linear-gradient(135deg, rgba(101, 210, 255, 0.08), transparent 24%),
-    linear-gradient(180deg, rgba(14, 30, 46, 0.92), rgba(8, 19, 30, 0.82));
+    linear-gradient(180deg, rgba(14, 30, 46, 0.88), rgba(8, 19, 30, 0.78));
   box-shadow: var(--shadow);
+  backdrop-filter: var(--glass);
 }
 
 .brandmark {
@@ -117,6 +128,14 @@ button {
   border-radius: 999px;
   padding: 10px 14px;
   font-size: 0.92rem;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.pill-link:hover,
+.chip:hover,
+.status-chip:hover {
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .identity-pill {
@@ -138,16 +157,29 @@ button {
   border-radius: 999px;
   padding: 12px 18px;
   font-weight: 600;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background 160ms ease;
 }
 
 .cta-link {
   background: linear-gradient(135deg, var(--accent), #ff9f43);
   color: #06111c;
+  box-shadow: 0 12px 30px rgba(255, 122, 51, 0.26);
 }
 
 .ghost-link {
   border: 1px solid var(--line-strong);
   color: var(--text);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.cta-link:hover,
+.ghost-link:hover {
+  transform: translateY(-1px);
+}
+
+.ghost-link:hover {
+  border-color: rgba(101, 210, 255, 0.24);
+  background: rgba(101, 210, 255, 0.08);
 }
 
 .hero-grid,
@@ -190,9 +222,32 @@ button {
 .manual-card,
 .card-block {
   border: 1px solid var(--line);
-  border-radius: 28px;
-  background: linear-gradient(180deg, var(--panel-strong), var(--panel));
+  border-radius: 30px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 24%),
+    linear-gradient(180deg, var(--panel-strong), var(--panel));
   box-shadow: var(--shadow);
+  backdrop-filter: var(--glass);
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::after,
+.hero-panel::after,
+.metric-card::after,
+.topic-card::after,
+.round-card::after,
+.question-card::after,
+.manual-card::after,
+.card-block::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(101, 210, 255, 0.06), transparent 18%),
+    linear-gradient(180deg, transparent 62%, rgba(255, 255, 255, 0.015));
 }
 
 .hero-panel,
@@ -223,6 +278,11 @@ button {
 }
 
 .entry-grid {
+  align-items: start;
+}
+
+.dossier-grid,
+.plaza-shell {
   align-items: start;
 }
 
@@ -289,6 +349,54 @@ button {
     linear-gradient(180deg, rgba(17, 36, 55, 0.98), rgba(10, 24, 39, 0.94));
 }
 
+.plaza-form-panel,
+.review-panel {
+  background:
+    radial-gradient(circle at top right, rgba(101, 210, 255, 0.08), transparent 22%),
+    linear-gradient(180deg, rgba(15, 33, 53, 0.98), rgba(9, 22, 36, 0.94));
+}
+
+.dossier-summary {
+  background:
+    radial-gradient(circle at top right, rgba(255, 122, 51, 0.12), transparent 24%),
+    linear-gradient(180deg, rgba(17, 36, 55, 0.98), rgba(8, 18, 30, 0.94));
+}
+
+.dossier-note {
+  padding: 18px 20px;
+  border: 1px solid rgba(101, 210, 255, 0.16);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 40%),
+    rgba(255, 255, 255, 0.025);
+}
+
+.axis-card {
+  min-height: 164px;
+}
+
+.board-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.signal-board .metric-card,
+.plaza-feed-card {
+  min-height: 100%;
+}
+
+.plaza-feed-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.plaza-feed-card {
+  background:
+    radial-gradient(circle at top right, rgba(255, 122, 51, 0.08), transparent 20%),
+    linear-gradient(180deg, rgba(14, 30, 46, 0.98), rgba(8, 18, 30, 0.92));
+}
+
 .spotlight-panel {
   background:
     radial-gradient(circle at top left, rgba(101, 210, 255, 0.08), transparent 24%),
@@ -307,6 +415,7 @@ button {
 .session-card {
   position: relative;
   overflow: hidden;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
 .flow-card::before,
@@ -323,10 +432,16 @@ button {
 
 .proof-rail {
   min-height: 100%;
+  background:
+    radial-gradient(circle at top right, rgba(101, 210, 255, 0.06), transparent 28%),
+    linear-gradient(180deg, rgba(14, 30, 46, 0.96), rgba(8, 18, 30, 0.92));
 }
 
 .session-panel {
   min-height: 100%;
+  background:
+    radial-gradient(circle at top right, rgba(255, 122, 51, 0.08), transparent 24%),
+    linear-gradient(180deg, rgba(14, 30, 46, 0.96), rgba(8, 18, 30, 0.92));
 }
 
 .session-empty {
@@ -347,6 +462,25 @@ button {
 
 .section {
   margin-top: 24px;
+}
+
+.metric-card,
+.topic-card,
+.round-card,
+.card-block,
+.proof-card,
+.session-card {
+  box-shadow: var(--shadow-soft);
+}
+
+.metric-card:hover,
+.topic-card:hover,
+.round-card:hover,
+.card-block:hover,
+.proof-card:hover,
+.session-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(101, 210, 255, 0.22);
 }
 
 .section h2,
@@ -453,6 +587,14 @@ button {
   padding: 14px 16px;
   background: rgba(255, 255, 255, 0.03);
   color: var(--text);
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: rgba(101, 210, 255, 0.36);
+  background: rgba(101, 210, 255, 0.04);
+  box-shadow: 0 0 0 4px rgba(101, 210, 255, 0.08);
 }
 
 .textarea-control {

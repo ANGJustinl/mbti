@@ -101,6 +101,9 @@ describe("current user context and /api/me routes", () => {
       currentUser: null,
       hasProfile: false,
       needsAssessment: true,
+      secondMeProfileSyncedAt: null,
+      pendingWritebacks: [],
+      recentWritebacks: [],
     });
   });
 

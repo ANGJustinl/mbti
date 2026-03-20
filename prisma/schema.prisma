@@ -8,62 +8,105 @@ datasource db {
 }
 
 model User {
-  id               String               @id
-  name             String
-  roleTag          String
-  contactCard      String?
-  isSeedCandidate  Boolean              @default(false)
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
-  assessments      AssessmentSubmission[]
+  id                 String                 @id
+  name               String
+  roleTag            String
+  contactCard        String?
+  isSeedCandidate    Boolean                @default(false)
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  assessments        AssessmentSubmission[]
+  plazaListing       PlazaListing?
   personalityProfile PersonalityProfile?
-  matchIntents     MatchIntent[]
+  matchIntents       MatchIntent[]
   reconnectDecisions ReconnectDecision[]
-  secondMeAccount  SecondMeAccount?
+  secondMeAccount    SecondMeAccount?
+  secondMeWritebacks SecondMeWriteback[]
 }
 
 model SecondMeAccount {
-  id             String   @id @default(cuid())
-  userId         String?  @unique
-  secondmeUserId String   @unique
-  name           String?
-  email          String?
-  avatarUrl      String?
-  route          String?
-  accessToken    String
-  refreshToken   String
-  tokenExpiresAt DateTime
-  scopeJson      String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id                 String    @id @default(cuid())
+  userId             String?   @unique
+  secondmeUserId     String    @unique
+  name               String?
+  email              String?
+  avatarUrl          String?
+  route              String?
+  accessToken        String
+  refreshToken       String
+  tokenExpiresAt     DateTime
+  scopeJson          String
+  shadesJson         String?
+  softMemoryJson     String?
+  profileSignalsJson String?
+  profileFetchedAt   DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  user               User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model AssessmentSubmission {
-  id           String   @id @default(cuid())
-  userId       String
-  answersJson  String
-  questionCount Int
-  submittedAt  DateTime @default(now())
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String               @id @default(cuid())
+  userId            String
+  answersJson       String
+  questionCount     Int
+  submittedAt       DateTime             @default(now())
+  user              User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  secondMeWritebacks SecondMeWriteback[]
 }
 
 model PersonalityProfile {
-  id                    String   @id @default(cuid())
-  userId                String   @unique
-  wmtiLetters           String
-  wmtiJson              String
-  lifeModeTitle         String
-  workModeTitle         String
-  strengthsJson         String
-  risksJson             String
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  wmtiLetters            String
+  wmtiJson               String
+  baseWmtiJson           String?
+  correctionJson         String?
+  secondMeEvidenceJson   String?
+  lifeModeTitle          String
+  workModeTitle          String
+  strengthsJson          String
+  risksJson              String
   collaborationStyleJson String
-  cardSummary           String
-  cardTagline           String
-  actionHintsJson       String
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collaborationThesis    String   @default("")
+  bestWith               String   @default("")
+  frictionWith           String   @default("")
+  preferredWorkSplit     String   @default("")
+  badStartPattern        String   @default("")
+  likelyMisread          String   @default("")
+  suggestedLead          String   @default("")
+  cardSummary            String
+  cardTagline            String
+  actionHintsJson        String
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PlazaListing {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  enabled          Boolean  @default(false)
+  headline         String
+  lookingFor       String
+  focusTagsJson    String
+  availabilityNote String
+  lastActiveAt     DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MatchSignal {
+  id         String   @id @default(cuid())
+  fromUserId String
+  toUserId   String
+  status     String   @default("pending")
+  sessionId  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([fromUserId, toUserId])
 }
 
 model MatchIntent {
@@ -85,6 +128,7 @@ model SandboxSession {
   matchIntentId      String
   userId             String
   targetUserId       String
+  source             String             @default("demo")
   topicId            String
   topicTitle         String
   topicSourceUrl     String
@@ -102,16 +146,24 @@ model SandboxSession {
   rounds             SandboxRound[]
   manual             CollaborationManual?
   reconnectDecisions ReconnectDecision[]
+  secondMeWritebacks SecondMeWriteback[]
 }
 
 model SandboxRound {
   id             String         @id @default(cuid())
   sessionId      String
   roundIndex     Int
+  roundType      String         @default("positioning")
+  issue          String?
   question       String
   agentAResponse String
   agentBResponse String
   observerNote   String
+  tensionPoint   String?
+  concession     String?
+  boundary       String?
+  synthesis      String?
+  roundJson      String?
   fitScore       Int
   createdAt      DateTime       @default(now())
   session        SandboxSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
@@ -144,4 +196,24 @@ model ReconnectDecision {
   user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([sessionId, userId])
+}
+
+model SecondMeWriteback {
+  id           String               @id @default(cuid())
+  targetKey    String               @unique
+  userId       String
+  sessionId    String?
+  assessmentId String?
+  milestone    String
+  previewJson  String
+  payloadJson  String?
+  consented    Boolean              @default(false)
+  status       String               @default("pending")
+  errorMessage String?
+  writtenAt    DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  assessment   AssessmentSubmission? @relation(fields: [assessmentId], references: [id], onDelete: SetNull)
+  session      SandboxSession?      @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

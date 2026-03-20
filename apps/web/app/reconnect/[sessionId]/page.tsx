@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { isDemoRequested, resolveCurrentUserContext } from "../../../lib/current-user";
+import { AppLink } from "../../_components/app-link";
 import { getReconnectPayload, getSessionParticipants } from "../../../lib/workflow";
 import { ReconnectConsole } from "./reconnect-console";
 
@@ -27,12 +27,12 @@ export default async function ReconnectPage({ params, searchParams }: PageProps)
       <main className="stack">
         <section className="hero-panel">
           <span className="eyebrow">Reconnect</span>
-          <h1 className="hero-title">这份协作说明书绑定在具体会话里。</h1>
-          <p className="lead">先恢复你的当前身份，再确认是否要从虚拟走向现实组队。</p>
+          <h1 className="hero-title">先确认你此刻认可的身份进入这里。</h1>
+          <p className="lead">后面的说明和决定，都会跟着这个版本的你继续。</p>
           <div className="action-row section">
-            <Link href={`/api/auth/login?next=/reconnect/${sessionId}`} className="cta-link">
+            <AppLink href={`/api/auth/login?next=/reconnect/${sessionId}`} className="cta-link">
               连接 Second Me
-            </Link>
+            </AppLink>
           </div>
         </section>
       </main>
@@ -70,6 +70,7 @@ export default async function ReconnectPage({ params, searchParams }: PageProps)
       session={payload.session}
       manual={manual}
       initialCards={cards}
+      writebacks={payload.writebacks}
     />
   );
 }

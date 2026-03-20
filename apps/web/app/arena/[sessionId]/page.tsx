@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { isDemoRequested, resolveCurrentUserContext } from "../../../lib/current-user";
+import { AppLink } from "../../_components/app-link";
 import { getSessionById } from "../../../lib/workflow";
 import { ArenaConsole } from "./arena-console";
 
@@ -27,12 +27,12 @@ export default async function ArenaPage({ params, searchParams }: PageProps) {
       <main className="stack">
         <section className="hero-panel">
           <span className="eyebrow">A2A 赛博沙盘</span>
-          <h1 className="hero-title">这个沙盘会话属于某个具体用户。</h1>
-          <p className="lead">先恢复你的当前身份，再继续这场 Agent 交锋。</p>
+          <h1 className="hero-title">先确认你此刻认可的身份进入这里。</h1>
+          <p className="lead">后面的沙盘和说明，都会跟着这个版本的你继续。</p>
           <div className="action-row section">
-            <Link href={`/api/auth/login?next=/arena/${sessionId}`} className="cta-link">
+            <AppLink href={`/api/auth/login?next=/arena/${sessionId}`} className="cta-link">
               连接 Second Me
-            </Link>
+            </AppLink>
           </div>
         </section>
       </main>

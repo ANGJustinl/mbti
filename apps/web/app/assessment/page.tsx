@@ -1,7 +1,6 @@
-import Link from "next/link";
-
 import { isDemoRequested, resolveCurrentUserContext } from "../../lib/current-user";
 import { loadQuestions } from "../../lib/loaders";
+import { AppLink } from "../_components/app-link";
 import { AssessmentFlow } from "./assessment-flow";
 
 interface PageProps {
@@ -20,16 +19,16 @@ export default async function AssessmentPage({ searchParams }: PageProps) {
   if (!currentUser) {
     return (
       <main className="stack">
-        <section className="hero-panel">
+        <section className="hero-panel tw-overflow-hidden tw-bg-[radial-gradient(circle_at_top_right,rgba(101,210,255,0.16),transparent_28%),linear-gradient(180deg,rgba(15,34,54,0.97),rgba(8,19,30,0.92))]">
           <span className="eyebrow">W-MBTI 测评</span>
-          <h1 className="hero-title">先绑定一个当前身份，再把你的工作方式讲清楚。</h1>
-          <p className="lead">
-            测评结果会直接写入当前用户画像，并成为后续匹配与沙盘的唯一前置条件。
+          <h1 className="hero-title tw-max-w-4xl">先确认你此刻认可的身份进入这里。</h1>
+          <p className="lead tw-max-w-2xl">
+            后面的测评、沙盘和说明，都会跟着这个版本的你继续。
           </p>
           <div className="action-row section">
-            <Link href="/api/auth/login?next=/assessment" className="cta-link">
+            <AppLink href="/api/auth/login?next=/assessment" className="cta-link">
               连接 Second Me
-            </Link>
+            </AppLink>
           </div>
         </section>
       </main>

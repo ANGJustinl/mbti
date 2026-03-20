@@ -1,10 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { startTransition, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 
-import type { CollaborationManual, ConflictFlag, DebateTopic, Recommendation, ReconnectCard, SessionState } from "@dual-core/domain";
+import type {
+  CollaborationManual,
+  ConflictFlag,
+  DebateTopic,
+  Recommendation,
+  ReconnectCard,
+  SecondMeWritebackPreview,
+  SessionState,
+} from "@dual-core/domain";
 
+import { SecondMeWritebackPanel } from "../../_components/secondme-writeback-panel";
 import { explainConflictFlag, getRecommendationInsight, getRiskTagLabel } from "../../../lib/conflict-explainer";
 import type { CurrentUserContext } from "../../../lib/current-user";
 import { withDemoQuery } from "../../../lib/route-utils";
@@ -29,9 +39,11 @@ interface ReconnectConsoleProps {
     recommendation: Recommendation;
     topic: DebateTopic;
     conflictFlags: ConflictFlag[];
+    secondMeEvidenceSummary?: CollaborationManual["secondMeEvidenceSummary"];
   };
   manual: CollaborationManual;
   initialCards: ReconnectCard[];
+  writebacks: SecondMeWritebackPreview[];
 }
 
 type ReconnectPayload =
@@ -66,7 +78,9 @@ export function ReconnectConsole({
   session,
   manual,
   initialCards,
+  writebacks,
 }: ReconnectConsoleProps) {
+  const router = useRouter();
   const [state, setState] = useState(initialState);
   const [cards, setCards] = useState(initialCards);
   const [decisionState, setDecisionState] = useState(decisions);
@@ -91,53 +105,52 @@ export function ReconnectConsole({
     actorUserId === participants.userId ? participants.target : participants.initiator;
   const recommendation = getRecommendationInsight(session.recommendation);
 
-  function confirm() {
+  async function confirm() {
     setPending(true);
     setError(null);
 
-    startTransition(async () => {
-      try {
-        const basePath =
-          actorUserId === currentUser.userId
-            ? "/api/reconnect/confirm"
-            : `/api/reconnect/confirm?actor=${encodeURIComponent(actorUserId)}`;
-        const response = await fetch(withDemoQuery(basePath, currentUser.demoMode), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            sessionId,
-            actorUserId: actorUserId === currentUser.userId ? undefined : actorUserId,
-            confirmed: true,
-          }),
-        });
+    try {
+      const basePath =
+        actorUserId === currentUser.userId
+          ? "/api/reconnect/confirm"
+          : `/api/reconnect/confirm?actor=${encodeURIComponent(actorUserId)}`;
+      const response = await fetch(withDemoQuery(basePath, currentUser.demoMode), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sessionId,
+          actorUserId: actorUserId === currentUser.userId ? undefined : actorUserId,
+          confirmed: true,
+        }),
+      });
 
-        const payload = (await response.json()) as ReconnectPayload;
-        if (payload.status === "error") {
-          setError(payload.error.message);
-          setPending(false);
-          return;
-        }
-
-        setState(payload.data.state);
-        setCards(payload.data.cards);
-        setDecisionState((current) => ({
-          ...current,
-          [actorUserId]: true,
-          ...(payload.data.state === "exchanged"
-            ? {
-                [participants.userId]: true,
-                [participants.targetUserId]: true,
-              }
-            : {}),
-        }));
+      const payload = (await response.json()) as ReconnectPayload;
+      if (payload.status === "error") {
+        setError(payload.error.message);
         setPending(false);
-      } catch (caught) {
-        setError(caught instanceof Error ? caught.message : "确认连接失败");
-        setPending(false);
+        return;
       }
-    });
+
+      setState(payload.data.state);
+      setCards(payload.data.cards);
+      setDecisionState((current) => ({
+        ...current,
+        [actorUserId]: true,
+        ...(payload.data.state === "exchanged"
+          ? {
+              [participants.userId]: true,
+              [participants.targetUserId]: true,
+            }
+          : {}),
+      }));
+      setPending(false);
+      router.refresh();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "确认连接失败");
+      setPending(false);
+    }
   }
 
   return (
@@ -146,7 +159,8 @@ export function ReconnectConsole({
         <article className="hero-panel">
           <span className="eyebrow">Reconnect</span>
           <h1 className="hero-title">《专属协作说明书》</h1>
-          <p className="lead">{manual.summary}</p>
+          <p className="lead">如果一段关系值得开始，它不该只留下“匹配成功”四个字。</p>
+          <p className="muted">{manual.summary}</p>
         </article>
 
         <aside className="panel">
@@ -157,6 +171,14 @@ export function ReconnectConsole({
           </div>
           <p className="lead">{recommendation.label}</p>
           <p className="muted">{recommendation.description}</p>
+          {session.secondMeEvidenceSummary ? (
+            <div className="pair-line section">
+              <span className="chip">Second Me</span>
+              <span className="muted">
+                {session.secondMeEvidenceSummary.usedCalibration ? "本次判定参考了复核画像" : "本次判定参考了协作侧写"}
+              </span>
+            </div>
+          ) : null}
           <div className="pair-line section">
             <span className="chip">题源</span>
             <a href={session.topic.sourceUrl} target="_blank" rel="noreferrer" className="ghost-link">
@@ -208,6 +230,30 @@ export function ReconnectConsole({
         </article>
       </section>
 
+      {manual.secondMeEvidenceSummary ? (
+        <section className="panel">
+          <div className="pair-line">
+            <span className="eyebrow">Second Me 依据</span>
+            <span className="chip">
+              {manual.secondMeEvidenceSummary.usedCalibration ? "使用复核画像" : "使用协作侧写"}
+            </span>
+          </div>
+          <p className="lead">{manual.secondMeEvidenceSummary.sourceSummary}</p>
+          <div className="pill-row section">
+            {manual.secondMeEvidenceSummary.influencedSections.map((item) => (
+              <span key={item} className="chip">
+                {item}
+              </span>
+            ))}
+          </div>
+          <ul className="list section">
+            {manual.secondMeEvidenceSummary.evidence.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <section className="split-grid section">
         <article className="panel">
           <span className="eyebrow">排雷解释</span>
@@ -250,6 +296,7 @@ export function ReconnectConsole({
             当前状态：
             {state === "exchanged" ? " 双方都已确认，数字名片已解锁。" : " 仍需双方确认，联系方式会保持脱敏。"}
           </p>
+          <p className="muted">你们已经看见了彼此如何做事，接下来，要不要靠近，由你决定。</p>
           <div className="stack section">
             <article className="card-block">
               <div className="pair-line">
@@ -334,6 +381,14 @@ export function ReconnectConsole({
           ))}
         </div>
       </section>
+
+      <SecondMeWritebackPanel
+        currentUser={currentUser}
+        pending={writebacks.filter((item) => item.status === "pending")}
+        recent={writebacks.filter((item) => item.status !== "pending")}
+        eyebrow="Second Me 记忆写回"
+        title="决定要不要把这段协作轨迹留给你的分身"
+      />
     </main>
   );
 }

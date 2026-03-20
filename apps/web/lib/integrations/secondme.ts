@@ -23,6 +23,17 @@ interface SandboxActResult {
   recommendation?: Recommendation;
   observerNote?: string;
   conflictTags?: string[];
+  rounds?: Array<{
+    roundType?: "positioning" | "negotiation" | "contract";
+    issue?: string;
+    agentAStance?: string;
+    agentBStance?: string;
+    tensionPoint?: string;
+    concession?: string;
+    boundary?: string;
+    synthesis?: string;
+    fitScore?: number;
+  }>;
 }
 
 interface ManualActResult {
@@ -34,7 +45,7 @@ interface ManualActResult {
 }
 
 function describeProfile(profile: PersonalityProfile) {
-  return [
+  const lines = [
     `姓名: ${profile.name}`,
     `角色: ${profile.roleTag}`,
     `W-MBTI: ${profile.wmti.letters}`,
@@ -43,7 +54,31 @@ function describeProfile(profile: PersonalityProfile) {
     `优势: ${profile.strengths.join(" / ")}`,
     `风险: ${profile.risks.join(" / ")}`,
     `协作偏好: ${profile.collaborationStyle.join(" / ")}`,
-  ].join("\n");
+    `协作像: ${profile.collaborationThesis}`,
+    `适合一起做: ${profile.bestWith}`,
+    `最容易摩擦: ${profile.frictionWith}`,
+    `偏好分工: ${profile.preferredWorkSplit}`,
+    `不适合怎样开始: ${profile.badStartPattern}`,
+    `最怕的误读: ${profile.likelyMisread}`,
+    `建议谁先主导: ${profile.suggestedLead}`,
+  ];
+
+  if (profile.baseWmti && profile.baseWmti.letters !== profile.wmti.letters) {
+    lines.push(`原始量表: ${profile.baseWmti.letters}`);
+  }
+
+  if (profile.secondMeReview?.enabled) {
+    lines.push(`Second Me 侧写: ${profile.secondMeReview.sourceSummary ?? "已启用"}`);
+    if (profile.secondMeReview.correction?.correctedAxes.length) {
+      lines.push(
+        `复核维度: ${profile.secondMeReview.correction.correctedAxes
+          .map((axis) => `${axis.dimension} ${axis.baseCode}->${axis.effectiveCode}`)
+          .join(" / ")}`,
+      );
+    }
+  }
+
+  return lines.join("\n");
 }
 
 function normalizeRecommendation(value?: string): Recommendation {
@@ -158,9 +193,10 @@ export async function runSandboxSession(
       systemPrompt: "你是双核职场的双盲沙盘裁判，只做结构化兼容度判断。",
       actionControl: [
         "仅输出合法 JSON，不要解释。",
-        '结构: {"fitScore": number, "recommendation": "continue"|"cautious"|"terminate", "observerNote": string, "conflictTags": string[]}',
+        '结构: {"fitScore": number, "recommendation": "continue"|"cautious"|"terminate", "observerNote": string, "conflictTags": string[], "rounds": [{"roundType":"positioning"|"negotiation"|"contract","issue":string,"agentAStance":string,"agentBStance":string,"tensionPoint":string,"concession":string,"boundary":string,"synthesis":string,"fitScore":number}]}',
         "fitScore 为 0 到 100 的整数。",
         "conflictTags 只能使用 control_conflict、ambiguity_tolerance_gap、communication_style_mismatch、execution_rhythm_gap。",
+        "rounds 必须严格返回 3 段，对应立场确认、冲突协商、规则敲定。",
       ].join("\n"),
     });
 
@@ -175,18 +211,42 @@ export async function runSandboxSession(
       recommendation,
       conflictFlags: conflictFlags?.length ? conflictFlags : fallback.conflictFlags,
       state: buildStateFromRecommendation(recommendation),
-      rounds: fallback.rounds.map((round, index) =>
-        index === fallback.rounds.length - 1
-          ? {
-              ...round,
-              fitScore,
-              observerNote:
-                typeof result.observerNote === "string" && result.observerNote.trim()
-                  ? result.observerNote
-                  : round.observerNote,
-            }
-          : round,
-      ),
+      rounds:
+        Array.isArray(result.rounds) && result.rounds.length === 3
+          ? fallback.rounds.map((round, index) => {
+              const item = result.rounds?.[index];
+              return {
+                ...round,
+                roundType: item?.roundType ?? round.roundType,
+                issue: item?.issue?.trim() || round.issue,
+                question: item?.issue?.trim() || round.question,
+                agentAResponse: item?.agentAStance?.trim() || round.agentAResponse,
+                agentBResponse: item?.agentBStance?.trim() || round.agentBResponse,
+                observerNote:
+                  index === fallback.rounds.length - 1 &&
+                  typeof result.observerNote === "string" &&
+                  result.observerNote.trim()
+                    ? result.observerNote
+                    : round.observerNote,
+                tensionPoint: item?.tensionPoint?.trim() || round.tensionPoint,
+                concession: item?.concession?.trim() || round.concession,
+                boundary: item?.boundary?.trim() || round.boundary,
+                synthesis: item?.synthesis?.trim() || round.synthesis,
+                fitScore: clampScore(item?.fitScore ?? round.fitScore),
+              };
+            })
+          : fallback.rounds.map((round, index) =>
+              index === fallback.rounds.length - 1
+                ? {
+                    ...round,
+                    fitScore,
+                    observerNote:
+                      typeof result.observerNote === "string" && result.observerNote.trim()
+                        ? result.observerNote
+                        : round.observerNote,
+                  }
+                : round,
+            ),
     };
   } catch {
     return fallback;
@@ -211,6 +271,8 @@ export async function generateCollaborationManual(
         "",
         "[协作方 B]",
         describeProfile(right),
+        "",
+        "请围绕双方在公开广场互选成功后的真实协作，生成具体而克制的说明书。",
       ].join("\n"),
       systemPrompt: "你是双核职场的协作契约起草人。",
       actionControl: [

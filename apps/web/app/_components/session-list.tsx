@@ -18,7 +18,7 @@ interface SessionListProps {
 function getSessionCta(variant: SessionVariant) {
   switch (variant) {
     case "sandboxing":
-      return "继续推进沙盘";
+      return "查看协商回放";
     case "reconnect_ready":
       return "查看说明书并确认";
     case "exchanged":
@@ -32,6 +32,10 @@ function getSessionCta(variant: SessionVariant) {
 
 function getSessionStatus(summary: SessionSummary, variant: SessionVariant) {
   if (variant === "sandboxing") {
+    if (summary.source === "plaza" && summary.currentRound >= 3) {
+      return "A2A 已生成";
+    }
+
     return summary.state === "matched" ? "待开始" : `${summary.currentRound} / 3 回合`;
   }
 
@@ -50,7 +54,7 @@ function getSessionStatus(summary: SessionSummary, variant: SessionVariant) {
 
 function getSessionBadge(summary: SessionSummary, variant: SessionVariant) {
   if (variant === "sandboxing") {
-    return summary.state;
+    return summary.source === "plaza" ? "A2A" : summary.state;
   }
 
   if (variant === "reconnect_ready") {
