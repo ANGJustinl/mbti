@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { isDemoRequested, resolveCurrentUserContext } from "../../../lib/current-user";
+import { recordAnalyticsEvent } from "../../../lib/analytics";
 import { AppLink } from "../../_components/app-link";
 import { getReconnectPayload, getSessionParticipants } from "../../../lib/workflow";
 import { ReconnectConsole } from "./reconnect-console";
@@ -48,6 +49,18 @@ export default async function ReconnectPage({ params, searchParams }: PageProps)
   const participants = await getSessionParticipants(sessionId).catch(() => null);
   if (!participants) {
     notFound();
+  }
+
+  if (!currentUser.demoMode) {
+    await recordAnalyticsEvent({
+      name: "manual_view",
+      actorUserId: currentUser.userId,
+      sessionId,
+      sourcePage: "/reconnect",
+      meta: {
+        state: payload.state,
+      },
+    }).catch(() => null);
   }
 
   const requestedActor =

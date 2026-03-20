@@ -11,6 +11,7 @@ model User {
   id                 String                 @id
   name               String
   roleTag            String
+  kind               String                 @default("human")
   contactCard        String?
   isSeedCandidate    Boolean                @default(false)
   createdAt          DateTime               @default(now())
@@ -22,6 +23,19 @@ model User {
   reconnectDecisions ReconnectDecision[]
   secondMeAccount    SecondMeAccount?
   secondMeWritebacks SecondMeWriteback[]
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(cuid())
+  name       String
+  actorUserId String
+  actorKind  String
+  targetUserId String?
+  targetKind String?
+  sessionId  String?
+  sourcePage String
+  metaJson   String?
+  createdAt  DateTime @default(now())
 }
 
 model SecondMeAccount {

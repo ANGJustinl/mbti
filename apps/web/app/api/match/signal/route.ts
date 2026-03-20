@@ -6,6 +6,7 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as
     | {
         toUserId?: string;
+        sourcePage?: string;
       }
     | null;
 
@@ -22,6 +23,7 @@ export async function POST(request: Request) {
     const result = await sendMatchSignal({
       fromUserId: currentUser.userId,
       toUserId: body.toUserId,
+      sourcePage: body.sourcePage,
     });
 
     return ok(result);

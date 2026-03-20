@@ -164,6 +164,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             <article key={candidate.profile.userId} className="card-block proof-card">
               <div className="pair-line">
                 <span className="chip">{candidate.profile.wmti.letters}</span>
+                {candidate.profile.userKind === "agent" ? <span className="chip">Agent 用户</span> : null}
                 <span className="muted tiny">{candidate.profile.roleTag}</span>
               </div>
               <h3>{candidate.profile.name}</h3>

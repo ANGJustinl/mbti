@@ -53,6 +53,19 @@ function fromTagInput(value: string) {
     .slice(0, 4);
 }
 
+function relationshipLabel(relationship: PlazaFeedItem["relationship"]) {
+  switch (relationship) {
+    case "mutual":
+      return "已互选";
+    case "incoming":
+      return "对方已先看中你";
+    case "outgoing":
+      return "你已发起，等待回应";
+    default:
+      return "可浏览对象";
+  }
+}
+
 export function PlazaLauncher({
   currentUser,
   profile,
@@ -139,6 +152,7 @@ export function PlazaLauncher({
             ? {
                 ...item,
                 signalStatus: payload.data.state,
+                relationship: payload.data.state === "mutual" ? "mutual" : "outgoing",
                 sessionId: payload.data.sessionId,
               }
             : item,
@@ -256,13 +270,15 @@ export function PlazaLauncher({
           <div className="card-grid section plaza-feed-grid">
             {feed.map((item) => {
               const reviewed = Boolean(item.listing.card.profile.secondMeReview?.enabled);
-              const signaled = item.signalStatus !== "none";
+              const signaled = item.relationship === "outgoing" || item.relationship === "mutual";
 
               return (
                 <article key={item.listing.userId} className="proof-card card-block plaza-feed-card">
                   <div className="board-strip">
                     <span className="chip">{item.listing.card.profile.wmti.letters}</span>
                     <span className="chip">{item.listing.card.profile.roleTag}</span>
+                    <span className="chip">{relationshipLabel(item.relationship)}</span>
+                    {item.listing.userKind === "agent" ? <span className="chip">Agent 用户</span> : null}
                     {reviewed ? <span className="chip">Second Me 复核</span> : null}
                   </div>
                   <h3>{item.listing.card.profile.name}</h3>
@@ -303,7 +319,9 @@ export function PlazaLauncher({
                       >
                         {signalPendingUserId === item.listing.userId
                           ? "正在交给 Agent..."
-                          : item.signalStatus === "pending"
+                          : item.relationship === "incoming"
+                            ? "回选并开始 A2A"
+                            : item.signalStatus === "pending"
                             ? "已发起，等待对方"
                             : enabled
                               ? "发起协作意向"

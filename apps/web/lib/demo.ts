@@ -168,6 +168,7 @@ export async function getReconnectCards(candidateId?: string): Promise<Reconnect
       userId: "demo-you",
       displayName: "你",
       title: getDemoUserProfile().workModeTitle,
+      contactKind: "human",
       contactHint: "已确认后展示站内数字名片",
       contactValue: "dualcore://profile/demo-you",
     },
@@ -176,8 +177,13 @@ export async function getReconnectCards(candidateId?: string): Promise<Reconnect
       userId: candidate.userId,
       displayName: candidate.name,
       title: candidate.workModeTitle,
-      contactHint: "已确认后展示站内数字名片",
-      contactValue: `dualcore://profile/${candidate.userId}`,
+      contactKind: candidate.userKind === "agent" ? "agent_proxy" : "human",
+      contactHint:
+        candidate.userKind === "agent" ? "已确认后展示代理名片" : "已确认后展示站内数字名片",
+      contactValue:
+        candidate.userKind === "agent"
+          ? `dualcore://agent/${candidate.userId}`
+          : `dualcore://profile/${candidate.userId}`,
     },
   ];
 }

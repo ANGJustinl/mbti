@@ -14,10 +14,18 @@ export async function GET(request: Request) {
       listPlazaFeed(currentUser.userId),
     ]);
 
+    const groups = {
+      mutual: feed.filter((item) => item.relationship === "mutual"),
+      incoming: feed.filter((item) => item.relationship === "incoming"),
+      outgoing: feed.filter((item) => item.relationship === "outgoing"),
+      browse: feed.filter((item) => item.relationship === "none"),
+    };
+
     return ok({
       currentUser,
       listing,
       feed,
+      groups,
     });
   } catch (error) {
     return failure(error instanceof Error ? error.message : "match feed failed");

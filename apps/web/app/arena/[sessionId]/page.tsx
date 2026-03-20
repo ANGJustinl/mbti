@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { isDemoRequested, resolveCurrentUserContext } from "../../../lib/current-user";
+import { recordAnalyticsEvent } from "../../../lib/analytics";
 import { AppLink } from "../../_components/app-link";
 import { getSessionById } from "../../../lib/workflow";
 import { ArenaConsole } from "./arena-console";
@@ -43,6 +44,19 @@ export default async function ArenaPage({ params, searchParams }: PageProps) {
 
   if (!session) {
     notFound();
+  }
+
+  if (!currentUser.demoMode) {
+    await recordAnalyticsEvent({
+      name: "arena_view",
+      actorUserId: currentUser.userId,
+      sessionId,
+      sourcePage: "/arena",
+      meta: {
+        source: session.source,
+        state: session.state,
+      },
+    }).catch(() => null);
   }
 
   return <ArenaConsole currentUser={currentUser} initialSession={session} />;

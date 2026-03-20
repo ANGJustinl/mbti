@@ -8,6 +8,7 @@ import {
   canExchangeContacts,
   canFinalizeSandbox,
   canStartMatch,
+  type ContactKind,
   type ConflictFlag,
   getStateAfterFinalize,
   getStateAfterRound,
@@ -28,6 +29,7 @@ import {
   type SessionState,
   type SecondMeReview,
   type SecondMeWritebackPreview,
+  type UserKind,
   type WmtiResult,
 } from "@dual-core/domain";
 import type {
@@ -41,6 +43,7 @@ import type {
   User,
 } from "../generated/prisma/client";
 
+import { recordAnalyticsEvent } from "./analytics";
 import { DEMO_USER_ID, buildDefaultDemoProfile } from "./current-user";
 import { prisma } from "./db";
 import { getDemoIntent, getTopTopics } from "./demo";
@@ -81,6 +84,7 @@ interface PublishPlazaInput {
 interface MatchSignalInput {
   fromUserId: string;
   toUserId: string;
+  sourcePage?: string;
 }
 
 interface AdvanceRoundInput {
@@ -103,6 +107,7 @@ export interface SessionParticipantSummary {
   userId: string;
   name: string;
   roleTag: string;
+  kind: UserKind;
   wmtiLetters?: string;
   lifeModeTitle?: string;
   workModeTitle?: string;
@@ -147,6 +152,7 @@ export interface SecondMeWorkspaceStatus {
 
 export interface PlazaFeedItem {
   listing: PlazaListing;
+  relationship: "none" | "incoming" | "outgoing" | "mutual";
   signalStatus: "none" | MatchSignalStatus;
   sessionId?: string;
 }
@@ -188,6 +194,7 @@ async function saveUserRecord(input: {
   id: string;
   name: string;
   roleTag: string;
+  kind?: User["kind"];
   contactCard: string;
   isSeedCandidate?: boolean;
 }) {
@@ -201,6 +208,7 @@ async function saveUserRecord(input: {
       data: {
         name: input.name,
         roleTag: input.roleTag,
+        kind: input.kind ?? existing.kind,
         contactCard: input.contactCard,
         isSeedCandidate: input.isSeedCandidate ?? existing.isSeedCandidate,
       },
@@ -212,6 +220,7 @@ async function saveUserRecord(input: {
       id: input.id,
       name: input.name,
       roleTag: input.roleTag,
+      kind: input.kind ?? "human",
       contactCard: input.contactCard,
       isSeedCandidate: input.isSeedCandidate ?? false,
     },
@@ -314,6 +323,7 @@ function toStoredProfile(record: PersonalityProfileRecord, user: User): Personal
     userId: record.userId,
     name: user.name,
     roleTag: user.roleTag,
+    userKind: (user.kind as UserKind) ?? "human",
     wmti,
     baseWmti: parseOptional<WmtiResult>(record.baseWmtiJson) ?? undefined,
     lifeModeTitle: record.lifeModeTitle,
@@ -351,23 +361,31 @@ function buildReconnectCards(
   right: PersonalityProfile,
   exchanged: boolean,
 ): ReconnectCard[] {
+  function buildCard(profile: PersonalityProfile): ReconnectCard {
+    const contactKind: ContactKind =
+      profile.userKind === "agent" ? "agent_proxy" : "human";
+
+    return {
+      sessionId: `${sessionId}-${profile.userId}`,
+      userId: profile.userId,
+      displayName: profile.name,
+      title: profile.workModeTitle,
+      contactKind,
+      contactHint:
+        contactKind === "agent_proxy"
+          ? "双方确认后展示代理名片"
+          : "双方确认后展示站内数字名片",
+      contactValue: exchanged
+        ? contactKind === "agent_proxy"
+          ? `dualcore://agent/${profile.userId}`
+          : `dualcore://profile/${profile.userId}`
+        : undefined,
+    };
+  }
+
   return [
-    {
-      sessionId: `${sessionId}-${left.userId}`,
-      userId: left.userId,
-      displayName: left.name,
-      title: left.workModeTitle,
-      contactHint: "双方确认后展示站内数字名片",
-      contactValue: exchanged ? `dualcore://profile/${left.userId}` : undefined,
-    },
-    {
-      sessionId: `${sessionId}-${right.userId}`,
-      userId: right.userId,
-      displayName: right.name,
-      title: right.workModeTitle,
-      contactHint: "双方确认后展示站内数字名片",
-      contactValue: exchanged ? `dualcore://profile/${right.userId}` : undefined,
-    },
+    buildCard(left),
+    buildCard(right),
   ];
 }
 
@@ -441,6 +459,7 @@ function toParticipantSummary(
     userId: user.id,
     name: user.name,
     roleTag: user.roleTag,
+    kind: (user.kind as UserKind) ?? "human",
     wmtiLetters: profileRecord?.wmtiLetters,
     lifeModeTitle: profileRecord?.lifeModeTitle,
     workModeTitle: profileRecord?.workModeTitle,
@@ -467,9 +486,44 @@ function defaultAvailabilityNote(profile: PersonalityProfile) {
   return profile.preferredWorkSplit;
 }
 
+const MIN_PLAZA_FEED_SIZE = 4;
+
+function getPlazaRelationshipState(input: {
+  outgoingStatus?: MatchSignalStatus | null;
+  incomingStatus?: MatchSignalStatus | null;
+}) {
+  if (input.outgoingStatus === "mutual" || input.incomingStatus === "mutual") {
+    return "mutual" as const;
+  }
+
+  if (input.incomingStatus === "pending") {
+    return "incoming" as const;
+  }
+
+  if (input.outgoingStatus === "pending") {
+    return "outgoing" as const;
+  }
+
+  return "none" as const;
+}
+
+function getPlazaRelationshipPriority(relationship: PlazaFeedItem["relationship"]) {
+  switch (relationship) {
+    case "mutual":
+      return 0;
+    case "incoming":
+      return 1;
+    case "outgoing":
+      return 2;
+    default:
+      return 3;
+  }
+}
+
 function toPlazaListing(record: PlazaListingRecord, card: DualCoreCard): PlazaListing {
   return {
     userId: record.userId,
+    userKind: card.profile.userKind,
     enabled: record.enabled,
     headline: record.headline,
     lookingFor: record.lookingFor,
@@ -519,6 +573,7 @@ async function upsertProfile(
     id: profile.userId,
     name: profile.name,
     roleTag: profile.roleTag,
+    kind: profile.userKind,
     isSeedCandidate,
     contactCard: `dualcore://profile/${profile.userId}`,
   });
@@ -619,7 +674,7 @@ export async function ensureWorkflowSeedData() {
           };
         }),
         confidence: 0.4,
-      }),
+      }, "agent"),
       lifeModeTitle: seed.lifeModeTitle,
       workModeTitle: seed.workModeTitle,
       strengths: seed.strengths,
@@ -628,6 +683,26 @@ export async function ensureWorkflowSeedData() {
     };
     const card = buildDualCoreCard(profile);
     await upsertProfile(profile, card, true);
+    await prisma.plazaListing.upsert({
+      where: { userId: seed.userId },
+      update: {
+        enabled: true,
+        headline: `${profile.name} ${profile.collaborationThesis}`,
+        lookingFor: profile.bestWith,
+        focusTagsJson: json(buildPlazaFocusTags(profile)),
+        availabilityNote: defaultAvailabilityNote(profile),
+        lastActiveAt: new Date(),
+      },
+      create: {
+        userId: seed.userId,
+        enabled: true,
+        headline: `${profile.name} ${profile.collaborationThesis}`,
+        lookingFor: profile.bestWith,
+        focusTagsJson: json(buildPlazaFocusTags(profile)),
+        availabilityNote: defaultAvailabilityNote(profile),
+        lastActiveAt: new Date(),
+      },
+    });
   }
 }
 
@@ -844,6 +919,47 @@ export async function getPlazaListing(userId: string): Promise<PlazaListing | nu
   return toPlazaListing(listing, card);
 }
 
+export async function getPlazaRelationship(userId: string, targetUserId: string) {
+  const [targetListing, targetProfile, signals] = await Promise.all([
+    prisma.plazaListing.findUnique({
+      where: { userId: targetUserId },
+    }),
+    getProfileByUserId(targetUserId),
+    prisma.matchSignal.findMany({
+      where: {
+        OR: [
+          {
+            fromUserId: userId,
+            toUserId: targetUserId,
+          },
+          {
+            fromUserId: targetUserId,
+            toUserId: userId,
+          },
+        ],
+      },
+    }),
+  ]);
+
+  const outgoing = signals.find(
+    (signal) => signal.fromUserId === userId && signal.toUserId === targetUserId,
+  );
+  const incoming = signals.find(
+    (signal) => signal.fromUserId === targetUserId && signal.toUserId === userId,
+  );
+  const relationship = getPlazaRelationshipState({
+    outgoingStatus: (outgoing?.status as MatchSignalStatus | undefined) ?? undefined,
+    incomingStatus: (incoming?.status as MatchSignalStatus | undefined) ?? undefined,
+  });
+
+  return {
+    relationship,
+    sessionId: outgoing?.sessionId ?? incoming?.sessionId ?? undefined,
+    targetAvailable: Boolean(targetListing?.enabled && targetProfile),
+    targetKind: targetProfile?.userKind ?? ((targetListing ? "human" : undefined) as UserKind | undefined),
+  };
+}
+
 export async function publishPlazaListing(input: PublishPlazaInput): Promise<PlazaListing> {
   const card = await getCardByUserId(input.userId);
   if (!card) {
@@ -904,21 +1020,28 @@ export async function listPlazaFeed(userId: string): Promise<PlazaFeedItem[]> {
     ],
   });
 
-  const liveListings = listings.filter(
-    (listing) => !listing.user.isSeedCandidate && Boolean(listing.user.personalityProfile),
+  const eligibleListings = listings.filter(
+    (listing) => Boolean(listing.user.personalityProfile),
   );
-  if (liveListings.length === 0) {
+  const humanListings = eligibleListings.filter((listing) => listing.user.kind !== "agent");
+  const agentListings = eligibleListings.filter((listing) => listing.user.kind === "agent");
+  const visibleListings = [
+    ...humanListings,
+    ...agentListings.slice(0, Math.max(0, MIN_PLAZA_FEED_SIZE - humanListings.length)),
+  ];
+
+  if (visibleListings.length === 0) {
     return [];
   }
 
-  const cards = liveListings.map((listing) =>
+  const cards = visibleListings.map((listing) =>
     toStoredCard(listing.user.personalityProfile!, listing.user),
   );
   const listingByUserId = new Map(
-    liveListings.map((listing, index) => [listing.userId, toPlazaListing(listing, cards[index])]),
+    visibleListings.map((listing, index) => [listing.userId, toPlazaListing(listing, cards[index])]),
   );
 
-  const counterpartIds = liveListings.map((listing) => listing.userId);
+  const counterpartIds = visibleListings.map((listing) => listing.userId);
   const signals = await prisma.matchSignal.findMany({
     where: {
       OR: [
@@ -952,15 +1075,31 @@ export async function listPlazaFeed(userId: string): Promise<PlazaFeedItem[]> {
       const incoming = signals.find(
         (signal) => signal.toUserId === userId && signal.fromUserId === counterpartId,
       );
+      const relationship = getPlazaRelationshipState({
+        outgoingStatus: (outgoing?.status as MatchSignalStatus | undefined) ?? undefined,
+        incomingStatus: (incoming?.status as MatchSignalStatus | undefined) ?? undefined,
+      });
 
       items.push({
         listing,
+        relationship,
         signalStatus: (outgoing?.status ?? incoming?.status ?? "none") as PlazaFeedItem["signalStatus"],
         sessionId: outgoing?.sessionId ?? incoming?.sessionId ?? undefined,
       });
   }
 
-  return items;
+  return items.sort((left, right) => {
+    const byRelationship =
+      getPlazaRelationshipPriority(left.relationship) -
+      getPlazaRelationshipPriority(right.relationship);
+    if (byRelationship !== 0) {
+      return byRelationship;
+    }
+
+    const leftActiveAt = left.listing.lastActiveAt ? Date.parse(left.listing.lastActiveAt) : 0;
+    const rightActiveAt = right.listing.lastActiveAt ? Date.parse(right.listing.lastActiveAt) : 0;
+    return rightActiveAt - leftActiveAt;
+  });
 }
 
 async function createPlazaSession(input: MatchSignalInput) {
@@ -1110,6 +1249,18 @@ export async function sendMatchSignal(input: MatchSignalInput) {
   });
 
   if (!reverse || reverse.status === "dismissed") {
+    await recordAnalyticsEvent({
+      name: "signal_sent",
+      actorUserId: input.fromUserId,
+      actorKind: fromProfile.userKind,
+      targetUserId: input.toUserId,
+      targetKind: toProfile.userKind,
+      sourcePage: input.sourcePage ?? "/match",
+      meta: {
+        flow: "plaza",
+      },
+    }).catch(() => null);
+
     return {
       state: "pending" as const,
       sessionId: undefined,
@@ -1136,6 +1287,33 @@ export async function sendMatchSignal(input: MatchSignalInput) {
       sessionId: session.id,
     },
   });
+
+  await Promise.all([
+    recordAnalyticsEvent({
+      name: "signal_returned",
+      actorUserId: input.fromUserId,
+      actorKind: fromProfile.userKind,
+      targetUserId: input.toUserId,
+      targetKind: toProfile.userKind,
+      sessionId: session.id,
+      sourcePage: input.sourcePage ?? "/match",
+      meta: {
+        flow: "plaza",
+      },
+    }).catch(() => null),
+    recordAnalyticsEvent({
+      name: "match_mutual",
+      actorUserId: input.fromUserId,
+      actorKind: fromProfile.userKind,
+      targetUserId: input.toUserId,
+      targetKind: toProfile.userKind,
+      sessionId: session.id,
+      sourcePage: input.sourcePage ?? "/match",
+      meta: {
+        flow: "plaza",
+      },
+    }).catch(() => null),
+  ]);
 
   return {
     state: "mutual" as const,
@@ -1275,6 +1453,7 @@ export async function submitAssessment(input: SubmitAssessmentInput) {
     id: input.userId,
     name,
     roleTag,
+    kind: "human",
     contactCard: `dualcore://profile/${input.userId}`,
   });
 
@@ -1633,6 +1812,25 @@ export async function confirmReconnect(input: ReconnectInput) {
     throw new Error("profiles not found");
   }
 
+  const actorProfile =
+    profiles.left.userId === input.userId ? profiles.left : profiles.right.userId === input.userId ? profiles.right : null;
+  const targetProfile =
+    profiles.left.userId === input.userId ? profiles.right : profiles.left;
+
+  await recordAnalyticsEvent({
+    name: "reconnect_confirm",
+    actorUserId: input.userId,
+    actorKind: actorProfile?.userKind ?? "human",
+    targetUserId: targetProfile.userId,
+    targetKind: targetProfile.userKind,
+    sessionId: session.id,
+    sourcePage: "/reconnect",
+    meta: {
+      confirmed: input.confirmed,
+      exchanged,
+    },
+  }).catch(() => null);
+
   return {
     state: exchanged ? "exchanged" : "reconnect_ready",
     cards: buildReconnectCards(session.id, profiles.left, profiles.right, exchanged),
@@ -1729,6 +1927,7 @@ export async function getReconnectPayload(sessionId: string, actorUserId?: strin
 }
 
 export async function resetWorkflowData() {
+  await prisma.analyticsEvent.deleteMany();
   await prisma.secondMeWriteback.deleteMany();
   await prisma.reconnectDecision.deleteMany();
   await prisma.collaborationManual.deleteMany();

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { EntryHero } from "../_components/entry-hero";
+import { MatchSignalAction } from "../_components/match-signal-action";
 import { NextActionCard } from "../_components/next-action-card";
 import { SecondMeWritebackPanel } from "../_components/secondme-writeback-panel";
 import { SessionList } from "../_components/session-list";
@@ -228,7 +229,10 @@ export default async function MePage({ searchParams }: PageProps) {
               <div className="stack section">
                 {plazaWorkspace.outgoing.map((item) => (
                   <article key={item.signalId} className="card-block">
-                    <h3>{item.counterpart.name}</h3>
+                    <div className="pair-line">
+                      <h3>{item.counterpart.name}</h3>
+                      {item.counterpart.kind === "agent" ? <span className="chip">Agent 用户</span> : null}
+                    </div>
                     <p className="muted">{item.headline}</p>
                     <span className="chip">等待对方互选</span>
                   </article>
@@ -244,11 +248,22 @@ export default async function MePage({ searchParams }: PageProps) {
                 <div className="stack section">
                   {plazaWorkspace.incoming.map((item) => (
                     <article key={item.signalId} className="card-block">
-                      <h3>{item.counterpart.name}</h3>
+                      <div className="pair-line">
+                        <h3>{item.counterpart.name}</h3>
+                        {item.counterpart.kind === "agent" ? <span className="chip">Agent 用户</span> : null}
+                      </div>
                       <p className="muted">{item.headline}</p>
-                      <Link href={`/card/${encodeURIComponent(item.counterpart.userId)}`} className="ghost-link section">
-                        先看对方双核名片
-                      </Link>
+                      <div className="inline-actions section">
+                        <Link href={`/card/${encodeURIComponent(item.counterpart.userId)}`} className="ghost-link">
+                          先看对方双核名片
+                        </Link>
+                        <MatchSignalAction
+                          targetUserId={item.counterpart.userId}
+                          demoMode={false}
+                          relationship="incoming"
+                          sourcePage="/me"
+                        />
+                      </div>
                     </article>
                   ))}
                 </div>
@@ -264,7 +279,10 @@ export default async function MePage({ searchParams }: PageProps) {
                 <div className="card-grid section">
                   {plazaWorkspace.mutual.map((item) => (
                     <article key={item.signalId} className="card-block">
-                      <h3>{item.counterpart.name}</h3>
+                      <div className="pair-line">
+                        <h3>{item.counterpart.name}</h3>
+                        {item.counterpart.kind === "agent" ? <span className="chip">Agent 用户</span> : null}
+                      </div>
                       <p className="muted">{item.headline}</p>
                       {item.sessionId ? (
                         <Link href={`/arena/${item.sessionId}`} className="ghost-link section">

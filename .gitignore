@@ -6,7 +6,10 @@ coverage
 .DS_Store
 .env
 .env.local
+.data
+.devbox-runtime
 npm-debug.log*
+pnpm-debug.log*
 prisma/*.db
 prisma/*.db-journal
 apps/web/generated/

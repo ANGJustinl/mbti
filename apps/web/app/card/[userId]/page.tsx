@@ -1,8 +1,16 @@
 import { notFound } from "next/navigation";
 
+import { MatchSignalAction } from "../../_components/match-signal-action";
 import { SecondMeWritebackPanel } from "../../_components/secondme-writeback-panel";
+import { recordAnalyticsEvent } from "../../../lib/analytics";
 import { isDemoRequested, resolveCurrentUserContext } from "../../../lib/current-user";
-import { getCardByUserId, getPlazaListing, getSecondMeWorkspaceStatus, listCandidateCards } from "../../../lib/workflow";
+import {
+  getCardByUserId,
+  getPlazaListing,
+  getPlazaRelationship,
+  getSecondMeWorkspaceStatus,
+  listCandidateCards,
+} from "../../../lib/workflow";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +61,23 @@ export default async function CardPage({ params, searchParams }: PageProps) {
     ? secondMeStatus.recentWritebacks.filter((item) => item.milestone === "assessment_completed")
     : [];
   const review = card.profile.secondMeReview;
+  const relationship =
+    currentUser && !currentUser.demoMode && currentUser.userId !== userId
+      ? await getPlazaRelationship(currentUser.userId, userId)
+      : null;
+
+  if (currentUser && !currentUser.demoMode) {
+    await recordAnalyticsEvent({
+      name: "card_view",
+      actorUserId: currentUser.userId,
+      targetUserId: userId,
+      targetKind: card.profile.userKind,
+      sourcePage: "/card",
+      meta: {
+        self: currentUser.userId === userId,
+      },
+    }).catch(() => null);
+  }
 
   return (
     <main className="stack">
@@ -65,6 +90,7 @@ export default async function CardPage({ params, searchParams }: PageProps) {
             <span className="chip">{card.profile.wmti.letters}</span>
             <span className="chip">{card.profile.roleTag}</span>
             <span className="chip">{card.profile.workModeTitle}</span>
+            {card.profile.userKind === "agent" ? <span className="chip">Agent 用户</span> : null}
             {review?.enabled ? <span className="chip">Second Me 已复核</span> : null}
           </div>
           <div className="dossier-note section">
@@ -74,6 +100,26 @@ export default async function CardPage({ params, searchParams }: PageProps) {
               这张名片不是在判断你是哪一类人，而是在提前说明你更容易怎样推进合作、又会在哪些地方被误解。
             </p>
           </div>
+          {relationship?.targetAvailable ? (
+            <div className="inline-actions section">
+              {relationship.relationship === "mutual" && relationship.sessionId ? (
+                <a href={`/arena/${relationship.sessionId}`} className="cta-link">
+                  查看 A2A 协商回放
+                </a>
+              ) : relationship.relationship === "outgoing" ? (
+                <span className="chip">已发起，等待对方回应</span>
+              ) : (
+                <MatchSignalAction
+                  targetUserId={userId}
+                  demoMode={currentUser?.demoMode ?? false}
+                  relationship={
+                    relationship.relationship === "incoming" ? "incoming" : "none"
+                  }
+                  sourcePage="/card"
+                />
+              )}
+            </div>
+          ) : null}
         </article>
 
         <aside className="panel review-panel">

@@ -1,0 +1,16 @@
+.git
+.env
+.env.local
+.DS_Store
+.data
+.devbox-runtime
+node_modules
+coverage
+dist
+Second-Me-Skills
+apps/web/node_modules
+apps/web/.next
+apps/web/.next-dev
+apps/web/tsconfig.tsbuildinfo
+prisma/*.db
+prisma/*.db-journal

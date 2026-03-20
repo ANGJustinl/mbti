@@ -27,6 +27,7 @@ async function saveUserRecord(input: {
   id: string;
   name: string;
   roleTag: string;
+  kind?: User["kind"];
   contactCard: string;
   isSeedCandidate?: boolean;
 }) {
@@ -40,6 +41,7 @@ async function saveUserRecord(input: {
       data: {
         name: input.name,
         roleTag: input.roleTag,
+        kind: input.kind ?? existing.kind,
         contactCard: input.contactCard,
         isSeedCandidate: input.isSeedCandidate ?? existing.isSeedCandidate,
       },
@@ -51,6 +53,7 @@ async function saveUserRecord(input: {
       id: input.id,
       name: input.name,
       roleTag: input.roleTag,
+      kind: input.kind ?? "human",
       contactCard: input.contactCard,
       isSeedCandidate: input.isSeedCandidate ?? false,
     },
@@ -101,6 +104,7 @@ async function ensureDemoFallbackUser() {
     id: DEMO_USER_ID,
     name: profile.name,
     roleTag: profile.roleTag,
+    kind: "human",
     contactCard: `dualcore://profile/${DEMO_USER_ID}`,
     isSeedCandidate: false,
   });
@@ -154,6 +158,7 @@ async function upsertSecondMeUser(session: SecondMeSession) {
     id: userId,
     name: displayName,
     roleTag,
+    kind: "human",
     contactCard: `dualcore://profile/${userId}`,
   });
 

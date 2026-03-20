@@ -1,5 +1,7 @@
 export type OptionKey = "A" | "B";
 export type Recommendation = "continue" | "cautious" | "terminate";
+export type UserKind = "human" | "agent";
+export type ContactKind = "human" | "agent_proxy";
 export type SecondMeWritebackMilestone =
   | "assessment_completed"
   | "sandbox_finalized"
@@ -99,6 +101,7 @@ export interface PersonalityProfile {
   userId: string;
   name: string;
   roleTag: string;
+  userKind: UserKind;
   wmti: WmtiResult;
   baseWmti?: WmtiResult;
   lifeModeTitle: string;
@@ -133,6 +136,7 @@ export interface MatchIntent {
 
 export interface PlazaListing {
   userId: string;
+  userKind: UserKind;
   enabled: boolean;
   headline: string;
   lookingFor: string;
@@ -224,6 +228,7 @@ export interface ReconnectCard {
   userId: string;
   displayName: string;
   title: string;
+  contactKind: ContactKind;
   contactHint: string;
   contactValue?: string;
 }

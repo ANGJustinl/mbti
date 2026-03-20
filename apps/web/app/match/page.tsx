@@ -1,6 +1,7 @@
 import { isDemoRequested, resolveCurrentUserContext } from "../../lib/current-user";
 import { getDemoIntent, getTopTopics } from "../../lib/demo";
 import { AppLink } from "../_components/app-link";
+import { recordAnalyticsEvent } from "../../lib/analytics";
 import { getPlazaListing, getProfileByUserId, listCandidateCards, listPlazaFeed } from "../../lib/workflow";
 import { MatchLauncher } from "./match-launcher";
 import { PlazaLauncher } from "./plaza-launcher";
@@ -61,6 +62,15 @@ export default async function MatchPage({ searchParams }: PageProps) {
       getPlazaListing(currentUser.userId),
       listPlazaFeed(currentUser.userId),
     ]);
+
+    await recordAnalyticsEvent({
+      name: "plaza_feed_view",
+      actorUserId: currentUser.userId,
+      sourcePage: "/match",
+      meta: {
+        feedSize: feed.length,
+      },
+    }).catch(() => null);
 
     return (
       <PlazaLauncher

@@ -4,6 +4,24 @@
 
 ### 已完成
 
+- 上线后开始推进 `转化闭环 V1`：
+  - `/me` 的 incoming 意向已支持一键回选，不必再绕回广场重新找人
+  - 双核名片页已加入关系感知 CTA：发起协作、回选并开始 A2A、查看协商回放
+  - `/match` feed 现在会把 `已互选 / 对方已先看中你 / 你已发起等待回应 / 普通可浏览` 显式区分并前置排序
+- 引入受控 `agent 用户` 供给：
+  - `User` 已新增 `kind = human | agent`
+  - 现有 seed 候选已收口为 `agent 用户`，并能以受控广场卡片的形式参与 live feed
+  - agent 用户会在广场、名片页、流程中心和 Reconnect 中被明确标识，不再和真人混成同一种身份
+  - agent 用户进入 Reconnect 后展示的是 `代理名片`，不是现实联系方式
+- 补入最小转化埋点：
+  - 新增库内 `AnalyticsEvent` 表
+  - 已记录 `plaza_feed_view / card_view / signal_sent / signal_returned / match_mutual / arena_view / manual_view / reconnect_confirm`
+  - 当前实现已能区分 `actorKind / targetKind`，便于后续直接查 human / agent 漏斗
+- 新增转化与 agent 相关回归：
+  - 广场供给不足时会补入 agent feed
+  - incoming 回选会直接进入互选和自动 A2A
+  - agent 用户在 Reconnect 终点展示 `dualcore://agent/...` 代理卡片
+
 - 修复“正在生成双核名片...”容易卡住的问题，并统一收口交互请求态：
   - `assessment` 提交改为明确的 async 提交流程，成功后直接浏览器跳转到双核名片页
   - `plaza / demo match / arena / reconnect / Second Me 写回` 全部移除了 `startTransition(async ...)` 这种容易让加载态失真的写法

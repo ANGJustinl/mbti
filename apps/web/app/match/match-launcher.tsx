@@ -166,6 +166,7 @@ export function MatchLauncher({
             <article className="card-block section">
               <div className="pair-line">
                 <span className="chip">{selectedCandidate.profile.wmti.letters}</span>
+                {selectedCandidate.profile.userKind === "agent" ? <span className="chip">Agent 用户</span> : null}
                 <span className="muted tiny">{selectedCandidate.profile.roleTag}</span>
               </div>
               <h3>{selectedCandidate.profile.name}</h3>

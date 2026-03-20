@@ -96,6 +96,7 @@ export function SessionList({
               <p className="muted">{summary.topic.title}</p>
               <div className="pair-line session-footnote">
                 <span className="chip">{summary.counterpart.wmtiLetters ?? "待测评"}</span>
+                {summary.counterpart.kind === "agent" ? <span className="chip">Agent 用户</span> : null}
                 <span className="muted tiny">{summary.counterpart.roleTag}</span>
               </div>
               <Link href={getSessionHref(summary, demoMode)} className="ghost-link section">

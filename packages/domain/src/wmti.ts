@@ -269,6 +269,7 @@ export function buildPersonalityProfile(
   name: string,
   roleTag: string,
   wmti: WmtiResult,
+  userKind: PersonalityProfile["userKind"] = "human",
 ): PersonalityProfile {
   const letters = wmti.letters;
   const middle = `${letters[1]}${letters[2]}`;
@@ -278,6 +279,7 @@ export function buildPersonalityProfile(
     userId,
     name,
     roleTag,
+    userKind,
     wmti,
     lifeModeTitle: lifeModeTitle(letters),
     workModeTitle: workModeTitle(letters),

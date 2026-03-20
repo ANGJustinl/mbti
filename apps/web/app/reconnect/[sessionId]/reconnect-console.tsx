@@ -301,6 +301,7 @@ export function ReconnectConsole({
             <article className="card-block">
               <div className="pair-line">
                 <span className="chip">{actorLabel}</span>
+                {actorSummary.kind === "agent" ? <span className="chip">Agent 用户</span> : null}
                 <span className={actorConfirmed ? "muted" : "warning"}>
                   {actorConfirmed ? "已确认" : "待确认"}
                 </span>
@@ -311,6 +312,7 @@ export function ReconnectConsole({
             <article className="card-block">
               <div className="pair-line">
                 <span className="chip">对方</span>
+                {counterpartSummary.kind === "agent" ? <span className="chip">Agent 用户</span> : null}
                 <span className={counterpartConfirmed ? "muted" : "warning"}>
                   {counterpartConfirmed ? "已确认" : "待确认"}
                 </span>
@@ -355,10 +357,13 @@ export function ReconnectConsole({
           <div className="stack section">
             {cards.map((card) => (
               <article key={card.sessionId} className="card-block">
-                <h3>{card.displayName}</h3>
+                <div className="pair-line">
+                  <h3>{card.displayName}</h3>
+                  {card.contactKind === "agent_proxy" ? <span className="chip">代理名片</span> : null}
+                </div>
                 <p className="muted">{card.title}</p>
                 <div className="pair-line">
-                  <span className="chip">数字名片</span>
+                  <span className="chip">{card.contactKind === "agent_proxy" ? "代理入口" : "数字名片"}</span>
                   <span className="muted">{card.contactValue ?? card.contactHint}</span>
                 </div>
               </article>
